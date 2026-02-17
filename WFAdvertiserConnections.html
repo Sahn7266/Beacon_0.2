@@ -254,6 +254,12 @@
             </a>
           </li>
           <li>
+               <a href="./AdvertiserSettings.html" data-nav-link class="flex items-center px-1 py-2 text-sm text-gray-700 hover:bg-blue-50 rounded-md">
+        <img src="./assets/svgs/AdvertiserSettings.svg" alt="Settings" class="w-6 h-6 mr-2" />
+        <span data-link-label>Settings</span>
+      </a>
+    </li>
+          <li>
             <a href="./AdvertiserSalesOrder.html" data-nav-link
                class="flex items-center px-1 py-2 text-sm text-gray-700 hover:bg-blue-50 rounded-md">
               <img src="./assets/svgs/SalesOrderExpense.svg" alt="Sales Orders" class="w-6 h-6 mr-2" />
@@ -280,7 +286,6 @@
               <span data-link-label>Ad Groups</span>
             </a>
           </li>
-          
         </ul>
       </nav>
 
@@ -1332,6 +1337,33 @@ document.addEventListener('DOMContentLoaded', function() {
   platformModal?.addEventListener('click', (e) => { if (e.target === platformModal) close(); });
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !platformModal.classList.contains('hidden')) close(); });
 });
+  </script>
+
+  <script>
+  document.addEventListener('DOMContentLoaded', () => {
+    document.body.style.zoom = '100%';
+  });
+  </script>
+
+  <script>
+  document.addEventListener('DOMContentLoaded', () => {
+    // Get current page filename without query params
+    const currentPage = window.location.pathname.split('/').pop().split('?')[0];
+    
+    // Highlight current sidebar link
+    document.querySelectorAll('#sidebar a[data-nav-link]').forEach(link => {
+      // Get href filename without ./ prefix and query params
+      const linkPage = link.getAttribute('href').replace('./', '').split('?')[0];
+      
+      if (linkPage === currentPage) {
+        link.classList.add('text-blue-700', 'bg-blue-50', 'font-medium');
+        link.classList.remove('text-gray-700');
+      } else {
+        link.classList.remove('text-blue-700', 'bg-blue-50', 'font-medium');
+        link.classList.add('text-gray-700');
+      }
+    });
+  });
   </script>
 </body>
 </html>
