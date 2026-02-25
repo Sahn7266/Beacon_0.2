@@ -473,9 +473,6 @@
                         <span>Ad Groups</span><span class="sort-indicator text-xs text-gray-400" aria-hidden="true"></span>
                       </button>
                     </th>
-                    <th scope="col" class="text-sm font-medium text-gray-700 uppercase tracking-wider">
-                      <span class="px-6 py-3 block">Actions</span>
-                    </th>
                   </tr>
                 </thead>
                 <tbody id="advertiserTableBody" class="bg-white divide-y divide-gray-200">
@@ -679,7 +676,7 @@
                 <div class="flex items-center justify-between p-4 bg-blue-50 border border-blue-200 rounded-lg">
                   <div>
                     <p class="text-sm font-medium text-gray-900">Enable Platform Connectors</p>
-                    <p class="text-xs text-gray-600 mt-1">Toggle to mark selected platforms as Connected</p>
+                    <p class="text-xs text-gray-600 mt-1">Toggle to mark selected platforms as Synced</p>
                   </div>
                   <button type="button" id="connectorsToggle" class="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent bg-gray-200 transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2" role="switch" aria-checked="false">
                     <span aria-hidden="true" class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out translate-x-0"></span>
@@ -716,7 +713,7 @@
                         </div>
                       </div>
                       <div class="flex items-center space-x-3">
-                        <span class="connector-status-label text-xs font-medium text-gray-600">Not Connected</span>
+                        <span class="connector-status-label text-xs font-medium text-gray-600">Not Synced</span>
                         <button type="button" class="connector-toggle relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent bg-gray-200 transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2" role="switch" aria-checked="false" data-connector="tradeDesk">
                           <span aria-hidden="true" class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out translate-x-0"></span>
                         </button>
@@ -751,7 +748,7 @@
                         </div>
                       </div>
                       <div class="flex items-center space-x-3">
-                        <span class="connector-status-label text-xs font-medium text-gray-600">Not Connected</span>
+                        <span class="connector-status-label text-xs font-medium text-gray-600">Not Synced</span>
                         <button type="button" class="connector-toggle relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent bg-gray-200 transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2" role="switch" aria-checked="false" data-connector="gcm">
                           <span aria-hidden="true" class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out translate-x-0"></span>
                         </button>
@@ -1417,18 +1414,6 @@
             // Table clicks
             if (this.elements.advertiserTableBody) {
               this.elements.advertiserTableBody.addEventListener('click', function(e) {
-                // Handle delete button
-                const deleteBtn = e.target.closest('.delete-advertiser');
-                if (deleteBtn) {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  const advId = deleteBtn.getAttribute('data-adv-id');
-                  if (advId) {
-                    self.deleteAdvertiser(advId);
-                  }
-                  return;
-                }
-                
                 const link = e.target.closest('a[data-adv-id]');
                 if (link) {
                   e.preventDefault();
@@ -1921,7 +1906,7 @@ self.validateForm();
             
             if (data.length === 0) {
               const tr = document.createElement('tr');
-              tr.innerHTML = '<td colspan="7" class="px-6 py-2 text-center text-gray-500">No advertisers found</td>';
+              tr.innerHTML = '<td colspan="6" class="px-6 py-2 text-center text-gray-500">No advertisers found</td>';
               this.elements.advertiserTableBody.appendChild(tr);
               return;
             }
@@ -1941,10 +1926,7 @@ self.validateForm();
                 '<td class="px-6 py-2 whitespace-nowrap text-sm text-black-500">' + (adv.account || '') + '</td>' +
                 '<td class="px-6 py-2 whitespace-nowrap text-sm text-black-500">' + (adv.status || '') + '</td>' +
                 '<td class="px-6 py-2 whitespace-nowrap text-sm text-black-500 tabular-nums">' + campaignCount + '</td>' +
-                '<td class="px-6 py-2 whitespace-nowrap text-sm text-black-500 tabular-nums">' + adGroupCount + '</td>' +
-                '<td class="px-6 py-2 whitespace-nowrap text-sm text-center">' +
-                  '<button class="text-red-600 hover:underline delete-advertiser" data-adv-id="' + (adv.id || '') + '" title="Delete Advertiser">Delete</button>' +
-                '</td>';
+                '<td class="px-6 py-2 whitespace-nowrap text-sm text-black-500 tabular-nums">' + adGroupCount + '</td>';
               this.elements.advertiserTableBody.appendChild(tr);
             }
           },
@@ -2246,7 +2228,6 @@ return false;
             // Collect DSP fields
             const dspData = {};
             const dspCheckbox = document.getElementById('dsp-trade-desk');
-            console.log('DSP Checkbox checked:', dspCheckbox?.checked);
             if (dspCheckbox && dspCheckbox.checked) {
               dspData.name = document.getElementById('dspName')?.value || '';
               dspData.partner = document.getElementById('dspPartner')?.value || '';
@@ -2269,20 +2250,17 @@ return false;
                 conversion: document.getElementById('dspDedupConversion')?.value || ''
               };
               dspData.yahooIntegration = document.getElementById('dspYahoo')?.value || '';
-              console.log('Collected DSP data:', dspData);
             }
 
             // Collect Ad Server fields
             const adServerData = {};
             const adServerCheckbox = document.getElementById('adserver-gcm');
-            console.log('Ad Server Checkbox checked:', adServerCheckbox?.checked);
             if (adServerCheckbox && adServerCheckbox.checked) {
               adServerData.advertiserName = document.getElementById('adServerAdvertiserName')?.value || '';
               adServerData.vertical = document.getElementById('adServerVertical')?.value || '';
               adServerData.declarations = {
                 euPoliticalAds: document.getElementById('adServerEuPolitical')?.value || ''
               };
-              console.log('Collected Ad Server data:', adServerData);
             }
 
             // Build the new advertiser object
@@ -2305,10 +2283,6 @@ return false;
               dsp: Object.keys(dspData).length > 0 ? dspData : null,
               adServer: Object.keys(adServerData).length > 0 ? adServerData : null
             };
-
-            console.log('New advertiser object being saved:', newAdvertiser);
-            console.log('DSP in new advertiser:', newAdvertiser.dsp);
-            console.log('AdServer in new advertiser:', newAdvertiser.adServer);
 
             // Add to the main advertiser list (at the beginning so it appears first)
             try {
@@ -2481,7 +2455,7 @@ init: function() {
                   const toggleSwitch = toggle.querySelector('span');
                   
                   if (newState) {
-                    // Set all to Connected
+                    // Set all to Synced
                     toggle.setAttribute('aria-checked', 'true');
                     toggle.classList.remove('bg-gray-200');
                     toggle.classList.add('bg-green-500');
@@ -2490,12 +2464,12 @@ init: function() {
                       toggleSwitch.classList.add('translate-x-5');
                     }
                     if (label) {
-                      label.textContent = 'Connected';
+                      label.textContent = 'Synced';
                       label.classList.remove('text-gray-600');
                       label.classList.add('text-green-700');
                     }
                   } else {
-                    // Set all to Not Connected
+                    // Set all to Not Synced
                     toggle.setAttribute('aria-checked', 'false');
                     toggle.classList.remove('bg-green-500');
                     toggle.classList.add('bg-gray-200');
@@ -2504,7 +2478,7 @@ init: function() {
                       toggleSwitch.classList.add('translate-x-0');
                     }
                     if (label) {
-                      label.textContent = 'Not Connected';
+                      label.textContent = 'Not Synced';
                       label.classList.remove('text-green-700');
                       label.classList.add('text-gray-600');
                     }
@@ -2522,26 +2496,26 @@ init: function() {
                   const toggleSwitch = this.querySelector('span');
                   
                   if (isConnected) {
-                    // Change to Not Connected
+                    // Change to Not Synced
                     this.setAttribute('aria-checked', 'false');
                     this.classList.remove('bg-green-500');
                     this.classList.add('bg-gray-200');
                     toggleSwitch.classList.remove('translate-x-5');
                     toggleSwitch.classList.add('translate-x-0');
                     if (label) {
-                      label.textContent = 'Not Connected';
+                      label.textContent = 'Not Synced';
                       label.classList.remove('text-green-700');
                       label.classList.add('text-gray-600');
                     }
                   } else {
-                    // Change to Connected
+                    // Change to Synced
                     this.setAttribute('aria-checked', 'true');
                     this.classList.remove('bg-gray-200');
                     this.classList.add('bg-green-500');
                     toggleSwitch.classList.remove('translate-x-0');
                     toggleSwitch.classList.add('translate-x-5');
                     if (label) {
-                      label.textContent = 'Connected';
+                      label.textContent = 'Synced';
                       label.classList.remove('text-gray-600');
                       label.classList.add('text-green-700');
                     }
@@ -2554,10 +2528,6 @@ init: function() {
           updatePlatformConfigVisibility: function() {
             const dspChecked = document.getElementById('dsp-trade-desk')?.checked;
             const adServerChecked = document.getElementById('adserver-gcm')?.checked;
-            
-            console.log('updatePlatformConfigVisibility called');
-            console.log('DSP checkbox checked:', dspChecked);
-            console.log('Ad Server checkbox checked:', adServerChecked);
 
             const dspSection = document.getElementById('dspFieldsSection');
             const adServerSection = document.getElementById('adServerFieldsSection');
@@ -2669,11 +2639,6 @@ nextStep: function() {
                   if (connectorsContent) {
                     connectorsContent.classList.remove('hidden');
                   }
-                }
-                
-                // Update platform config visibility when on step 3
-                if (contentStep === 3) {
-                  this.updatePlatformConfigVisibility();
                 }
               } else {
                 content.classList.remove('active');

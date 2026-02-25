@@ -311,7 +311,7 @@
             <!-- GCM Configuration -->
             <div id="gcmPlatformCard">
               <h3 class="text-lg font-bold text-gray-800 mb-1 pt-6">GCM Configuration</h3>
-              <div class="bg-gray-100 border border-gray-300 rounded-md px-4 pt-4 pb-4">
+              <div class="bg-gray-100 border border-gray-300 rounded-md hidden px-4 pt-4 pb-4">
                 <div class="grid grid-cols-2 md:grid-cols-6 gap-x-4 gap-2">
                   <div class="flex items-center">
                     <label for="gcmVertical" class="text-sm font-semibold text-gray-600">Advertiser Vertical: <span class="text-red-500">*</span></label>
@@ -341,7 +341,7 @@
             <!-- Trade Desk Configuration -->
             <div id="tradeDeskPlatformCard">
               <h3 class="text-lg font-bold text-gray-800 mb-1 pt-6">Trade Desk Configuration</h3>
-              <div class="bg-gray-100 border border-gray-300 rounded-md px-4 pt-4 pb-4">
+              <div class="bg-gray-100 border border-gray-300 rounded-md hidden px-4 pt-4 pb-4">
                 <div class="grid grid-cols-2 md:grid-cols-6 gap-x-4 gap-y-3">
                   <div class="flex items-center">
                     <label for="tdPartner" class="text-sm font-semibold text-gray-600">Partner: <span class="text-red-500">*</span></label>
@@ -357,6 +357,30 @@
                   </div>
                   <div></div>
 
+                  <div class="flex items-center">
+                    <label for="tdCountry" class="text-sm font-semibold text-gray-600">Advertiser Country:</label>
+                  </div>
+                  <div class="relative">
+                    <input type="text" id="tdCountry" class="text-sm text-gray-900 border border-gray-300 bg-white rounded px-2 py-1 w-full focus:outline-none focus:bg-white focus:border-blue-300" placeholder="United States">
+                  </div>
+                  <div class="flex items-center">
+                    <label for="tdEU" class="text-sm font-semibold text-gray-600">Targeting EU?</label>
+                  </div>
+                  <div class="relative w-20">
+                    <select id="tdEU" class="text-sm text-gray-900 border border-gray-300 bg-white rounded px-2 py-1 w-full focus:outline-none focus:bg-white focus:border-blue-300">
+                      <option>No</option>
+                      <option>Yes</option>
+                    </select>
+                  </div>
+                  <div class="md:col-span-2"></div>
+
+                  <div class="flex items-center">
+                    <label for="tdIndustryCategory" class="text-sm font-semibold text-gray-600">Industry Category:</label>
+                  </div>
+                  <div class="relative">
+                    <input type="text" id="tdIndustryCategory" class="text-sm text-gray-900 border border-gray-300 bg-white rounded px-2 py-1 w-full focus:outline-none focus:bg-white focus:border-blue-300" placeholder="Select Category">
+                  </div>
+                  <div class="flex items-center">
                   <div class="flex items-center">
                     <label for="tdCountry" class="text-sm font-semibold text-gray-600">Advertiser Country:</label>
                   </div>
@@ -438,7 +462,7 @@
             <!-- DV360 Configuration -->
             <div id="dv360PlatformCard">
               <h3 class="text-lg font-bold text-gray-800 mb-1 pt-6">DV360 Configuration</h3>
-              <div class="bg-gray-100 border border-gray-300 rounded-md px-4 pt-4 pb-4">
+              <div class="bg-gray-100 border border-gray-300 rounded-md hidden px-4 pt-4 pb-4">
                 <div class="grid grid-cols-2 md:grid-cols-6 gap-x-4 gap-y-3">
                   <div class="flex items-center">
                     <label for="dvStatus" class="text-sm font-semibold text-gray-600">Status: <span class="text-red-500">*</span></label>
@@ -972,21 +996,8 @@
               const advertisers = DataManager.loadAdvertisers();
               const exists = advertisers.some(a => String(a.id) === String(newAdvertiser.id));
               if (!exists) advertisers.unshift(newAdvertiser);
-              
-              console.log('=== SAVING TO LOCALSTORAGE ===');
-              console.log('Advertiser being saved:', JSON.stringify(newAdvertiser, null, 2));
-              console.log('Has platformSettings?', !!newAdvertiser.platformSettings);
-              console.log('platformSettings.tradeDesk:', newAdvertiser.platformSettings?.tradeDesk);
-              console.log('platformSettings.gcm:', newAdvertiser.platformSettings?.gcm);
-              console.log('All advertisers list:', advertisers.length);
-              
               DataManager.saveAdvertisers(advertisers);
               DataManager.saveSelectedAdvertiser(newAdvertiser);
-              
-              console.log('=== SAVED - VERIFYING ===');
-              const saved = DataManager.loadSelectedAdvertiser();
-              console.log('Loaded back from storage:', JSON.stringify(saved, null, 2));
-              console.log('Verified platformSettings:', saved?.platformSettings);
             } catch (e) {
               console.error('Error persisting advertiser after Beacon success', e);
             }
@@ -1268,18 +1279,8 @@
         try {
           const advertiserData = DataManager.loadSelectedAdvertiser();
           const platforms = advertiserData?.platforms || {};
-          
-          // For NEW advertisers (no existing data), show all platform cards by default
-          // so users can fill in the fields before creating
-          const isNewAdvertiser = !advertiserData || advertiserData.id === 'temp_new_advertiser' || !advertiserData.id;
-          if (isNewAdvertiser) {
-            // Show all platform configuration cards for new advertisers
-            const defaultPlatforms = { gcm: true, tradeDesk: true, dv360: true };
-            this.updateDisplay(defaultPlatforms);
-          } else {
-            this.updateDisplay(platforms);
-            this.loadSettings(advertiserData);
-          }
+          this.updateDisplay(platforms);
+          this.loadSettings(advertiserData);
         } catch (e) {
           console.error('Error loading platform configuration:', e);
           this.showNoPlatforms();
@@ -1363,9 +1364,7 @@
         const openModal = () => {
           try {
             const advertiserData = DataManager.loadSelectedAdvertiser();
-            // For NEW advertisers, default to all platforms checked
-            const isNewAdvertiser = !advertiserData || advertiserData.id === 'temp_new_advertiser' || !advertiserData.id;
-            const platforms = isNewAdvertiser ? { gcm: true, tradeDesk: true, dv360: true } : (advertiserData?.platforms || {});
+            const platforms = advertiserData?.platforms || {};
             
             if (elements.gcmCheckbox) elements.gcmCheckbox.checked = !!platforms.gcm;
             if (elements.tradeDeskCheckbox) elements.tradeDeskCheckbox.checked = !!platforms.tradeDesk;
@@ -1387,7 +1386,7 @@
         if (elements.saveBtn) {
           elements.saveBtn.addEventListener('click', () => {
             try {
-              let advertiserData = DataManager.loadSelectedAdvertiser();
+              const advertiserData = DataManager.loadSelectedAdvertiser();
               const advertisers = DataManager.loadAdvertisers();
               const selectedId = localStorage.getItem(APP_CONFIG.STORAGE_KEYS.SELECTED_ID);
               
@@ -1397,32 +1396,22 @@
                 dv360: elements.dv360Checkbox?.checked || false
               };
               
-              // For NEW advertisers, create a temporary object to hold platform selections
-              if (!advertiserData) {
-                advertiserData = {
-                  id: 'temp_new_advertiser',
-                  platforms: newPlatforms,
-                  platformSettings: {}
-                };
-              } else {
+              if (advertiserData) {
                 advertiserData.platforms = newPlatforms;
-              }
-              
-              // Update existing advertiser in list if it exists
-              if (selectedId) {
+                
                 const advIndex = advertisers.findIndex(a => String(a.id) === String(selectedId));
                 if (advIndex !== -1) {
                   advertisers[advIndex].platforms = newPlatforms;
                   DataManager.saveAdvertisers(advertisers);
                 }
-              }
-              
-              DataManager.saveSelectedAdvertiser(advertiserData);
-              this.updateDisplay(newPlatforms);
-              closeModal();
-              
-              if (window.toast?.success) {
-                window.toast.success('Platform configuration updated successfully', APP_CONFIG.TIMEOUTS.TOAST);
+                
+                DataManager.saveSelectedAdvertiser(advertiserData);
+                this.updateDisplay(newPlatforms);
+                closeModal();
+                
+                if (window.toast?.success) {
+                  window.toast.success('Platform configuration updated successfully', APP_CONFIG.TIMEOUTS.TOAST);
+                }
               }
             } catch (e) {
               console.error('Error saving platform configuration:', e);
@@ -1436,11 +1425,6 @@
     // Application Initialization
     class App {
       static init() {
-        // IMPORTANT: Clear selected advertiser data for NEW advertiser creation
-        // This ensures we don't have stale data from viewing other advertisers
-        localStorage.removeItem(APP_CONFIG.STORAGE_KEYS.SELECTED_DATA);
-        localStorage.removeItem(APP_CONFIG.STORAGE_KEYS.SELECTED_ID);
-        
         // Initialize data binding
         DataBinder.initializeData();
         
@@ -1510,14 +1494,18 @@
         };
 
         // Read platform selections from the Edit Platforms modal checkboxes (if present).
-        // For new advertisers, default to showing all platforms selected
-        let platforms = { gcm: true, tradeDesk: true, dv360: true };
+        // Default to stored selected advertiser platforms if user hasn't opened the modal.
+        let platforms = { gcm: false, tradeDesk: false, dv360: false };
+        try {
+          const stored = DataManager.loadSelectedAdvertiser();
+          platforms = stored?.platforms || platforms;
+        } catch (e) {
+          // noop - keep defaults
+        }
 
         const gcmCheckbox = document.getElementById('editGCMCheckbox');
         const tradeDeskCheckbox = document.getElementById('editTradeDeskCheckbox');
         const dv360Checkbox = document.getElementById('editDV360Checkbox');
-        
-        // If checkboxes exist, use their current state
         if (gcmCheckbox) platforms.gcm = !!gcmCheckbox.checked;
         if (tradeDeskCheckbox) platforms.tradeDesk = !!tradeDeskCheckbox.checked;
         if (dv360Checkbox) platforms.dv360 = !!dv360Checkbox.checked;
@@ -1525,35 +1513,11 @@
         // Collect platform-specific settings from the form so the provisioner can validate them.
         const platformSettings = {
           gcm: {
-            advertiserName: getName(), // Use the advertiser name
-            vertical: document.getElementById('gcmVertical')?.value?.trim() || '',
-            euPoliticalAds: 'No' // Default for now until field is added to form
+            vertical: document.getElementById('gcmVertical')?.value?.trim() || ''
           },
           tradeDesk: {
             partner: document.getElementById('tdPartner')?.value?.trim() || '',
-            domain: document.getElementById('tdDomain')?.value?.trim() || '',
-            country: document.getElementById('tdCountry')?.value?.trim() || '',
-            euTargeting: document.getElementById('tdEU')?.value?.trim() || 'No',
-            industryCategory: document.getElementById('tdIndustryCategory')?.value?.trim() || '',
-            subCategory: document.getElementById('tdIndustrySubCategory')?.value?.trim() || '',
-            attributionWindows: {
-              click: {
-                value: document.getElementById('tdClickWindow')?.value || '90',
-                unit: document.getElementById('tdClickUnit')?.value || 'Days'
-              },
-              view: {
-                value: document.getElementById('tdViewWindow')?.value || '7',
-                unit: document.getElementById('tdViewUnit')?.value || 'Days'
-              },
-              impression: {
-                value: document.getElementById('tdImpressionWindow')?.value || '90',
-                unit: document.getElementById('tdImpressionUnit')?.value || 'Days'
-              },
-              conversion: {
-                value: document.getElementById('tdConversionWindow')?.value || '60',
-                unit: document.getElementById('tdConversionUnit')?.value || 'Days'
-              }
-            }
+            domain: document.getElementById('tdDomain')?.value?.trim() || ''
           },
           dv360: {
             status: document.getElementById('dvStatus')?.value?.trim() || '',
@@ -1563,19 +1527,7 @@
           }
         };
 
-        // DEBUG: Log individual field values before building object
-        console.log('=== COLLECTING FORM DATA ===');
-        console.log('Trade Desk Partner:', document.getElementById('tdPartner')?.value);
-        console.log('Trade Desk Domain:', document.getElementById('tdDomain')?.value);
-        console.log('Trade Desk Country:', document.getElementById('tdCountry')?.value);
-        console.log('Trade Desk EU:', document.getElementById('tdEU')?.value);
-        console.log('Trade Desk Industry Category:', document.getElementById('tdIndustryCategory')?.value);
-        console.log('Trade Desk Industry Sub-Category:', document.getElementById('tdIndustrySubCategory')?.value);
-        console.log('GCM Vertical:', document.getElementById('gcmVertical')?.value);
-        console.log('Platforms object:', platforms);
-        console.log('Platform Settings object:', platformSettings);
-        
-        const advertiserObject = {
+        return {
           id: 'ADV000' + Date.now().toString().slice(-6),
           name: getName(),
           account: getAccount() || '',
@@ -1588,12 +1540,6 @@
           platforms: platforms,
           platformSettings: platformSettings
         };
-        
-        // DEBUG: Log what we're about to save
-        console.log('=== FINAL ADVERTISER OBJECT ===');
-        console.log('Full advertiser object:', JSON.stringify(advertiserObject, null, 2));
-        
-        return advertiserObject;
       }
 
       static initCancelButton() {
