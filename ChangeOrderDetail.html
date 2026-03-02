@@ -158,6 +158,31 @@
     </main>
   </div>
 
+  <!-- Entity Select Modal -->
+  <div id="entitySelectModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center">
+    <div class="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[80vh] flex flex-col">
+      <div class="p-4 border-b border-gray-200 flex items-center justify-between">
+        <h2 class="text-lg font-semibold text-gray-800">Manage Entities</h2>
+        <button onclick="closeEntitySelectModal()" class="text-gray-400 hover:text-gray-600 text-2xl leading-none">&times;</button>
+      </div>
+      <div class="p-4 border-b border-gray-200 bg-gray-50">
+        <div class="flex gap-2">
+          <button id="tabCampaigns" onclick="switchEntityTab('campaigns')" class="px-4 py-2 text-sm font-medium rounded-md bg-purple-100 text-purple-800">Campaigns</button>
+          <button id="tabAdGroups" onclick="switchEntityTab('adgroups')" class="px-4 py-2 text-sm font-medium rounded-md bg-gray-200 text-gray-600 hover:bg-gray-300">Ad Groups</button>
+        </div>
+      </div>
+      <div class="flex-1 overflow-y-auto p-4">
+        <div id="entityListContainer">
+          <p class="text-gray-500 text-center py-4">Loading entities...</p>
+        </div>
+      </div>
+      <div class="p-4 border-t border-gray-200 flex justify-end gap-2">
+        <button onclick="closeEntitySelectModal()" class="px-4 py-2 text-sm bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200">Close</button>
+        <button onclick="applyEntitySelection()" class="px-4 py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700">Apply Changes</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Page Script -->
   <script>
   document.addEventListener('DOMContentLoaded', () => {
@@ -408,6 +433,185 @@
       buildEntitySections(co);
       if (typeof showToast === 'function') showToast(`${type} removed`, 'info');
     };
+
+    // ========== ENTITY SELECT MODAL FUNCTIONS ==========
+    let currentEntityTab = 'campaigns';
+    let entitySelections = { campaigns: new Set(), adgroups: new Set() };
+
+    // Initialize selections from current CO entities
+    function initEntitySelections() {
+      entitySelections = { campaigns: new Set(), adgroups: new Set() };
+      if (co.entities) {
+        co.entities.forEach(e => {
+          if (e.type === 'campaign') entitySelections.campaigns.add(e.id);
+          if (e.type === 'adgroup') entitySelections.adgroups.add(e.id);
+        });
+      }
+    }
+
+    window.openEntitySelectModal = function(coId) {
+      initEntitySelections();
+      document.getElementById('entitySelectModal').classList.remove('hidden');
+      switchEntityTab('campaigns');
+    };
+
+    window.closeEntitySelectModal = function() {
+      document.getElementById('entitySelectModal').classList.add('hidden');
+    };
+
+    window.switchEntityTab = function(tab) {
+      currentEntityTab = tab;
+      
+      // Update tab button styles
+      const tabCam = document.getElementById('tabCampaigns');
+      const tabAG = document.getElementById('tabAdGroups');
+      
+      if (tab === 'campaigns') {
+        tabCam.className = 'px-4 py-2 text-sm font-medium rounded-md bg-purple-100 text-purple-800';
+        tabAG.className = 'px-4 py-2 text-sm font-medium rounded-md bg-gray-200 text-gray-600 hover:bg-gray-300';
+      } else {
+        tabCam.className = 'px-4 py-2 text-sm font-medium rounded-md bg-gray-200 text-gray-600 hover:bg-gray-300';
+        tabAG.className = 'px-4 py-2 text-sm font-medium rounded-md bg-amber-100 text-amber-800';
+      }
+      
+      renderEntityList();
+    };
+
+    function renderEntityList() {
+      const container = document.getElementById('entityListContainer');
+      
+      if (currentEntityTab === 'campaigns') {
+        // Load campaigns from localStorage
+        let campaigns = [];
+        try {
+          const tree = JSON.parse(localStorage.getItem('campaign_tree_groups') || '{}');
+          if (tree.campaigns) campaigns = campaigns.concat(tree.campaigns);
+          if (tree.groups) tree.groups.forEach(g => { if (g.campaigns) campaigns = campaigns.concat(g.campaigns); });
+        } catch {}
+
+        if (campaigns.length === 0) {
+          container.innerHTML = '<p class="text-gray-500 text-center py-8">No campaigns available for this advertiser.</p>';
+          return;
+        }
+
+        container.innerHTML = campaigns.map(c => {
+          const isSelected = entitySelections.campaigns.has(c.id);
+          return `
+            <div class="flex items-center gap-3 p-3 border border-gray-200 rounded-md mb-2 hover:bg-gray-50 cursor-pointer ${isSelected ? 'bg-purple-50 border-purple-300' : ''}" onclick="toggleEntitySelection('campaigns', '${c.id}')">
+              <input type="checkbox" ${isSelected ? 'checked' : ''} class="w-4 h-4 text-purple-600 pointer-events-none" />
+              <div class="flex-1">
+                <div class="font-medium text-gray-800">${c.name || c.id}</div>
+                <div class="text-xs text-gray-500">ID: ${c.id} ${c.dsp ? '• DSP: ' + c.dsp : ''}</div>
+              </div>
+              <span class="text-xs px-2 py-0.5 rounded bg-purple-100 text-purple-700">Campaign</span>
+            </div>
+          `;
+        }).join('');
+      } else {
+        // Load ad groups from localStorage  
+        let adgroups = [];
+        try {
+          adgroups = JSON.parse(localStorage.getItem('adgroups_data_v1') || '[]');
+        } catch {}
+
+        if (adgroups.length === 0) {
+          container.innerHTML = '<p class="text-gray-500 text-center py-8">No ad groups available for this advertiser.</p>';
+          return;
+        }
+
+        container.innerHTML = adgroups.map(ag => {
+          const isSelected = entitySelections.adgroups.has(ag.id);
+          return `
+            <div class="flex items-center gap-3 p-3 border border-gray-200 rounded-md mb-2 hover:bg-gray-50 cursor-pointer ${isSelected ? 'bg-amber-50 border-amber-300' : ''}" onclick="toggleEntitySelection('adgroups', '${ag.id}')">
+              <input type="checkbox" ${isSelected ? 'checked' : ''} class="w-4 h-4 text-amber-600 pointer-events-none" />
+              <div class="flex-1">
+                <div class="font-medium text-gray-800">${ag.name || ag.id}</div>
+                <div class="text-xs text-gray-500">ID: ${ag.id} ${ag.classification ? '• ' + ag.classification : ''}</div>
+              </div>
+              <span class="text-xs px-2 py-0.5 rounded bg-amber-100 text-amber-700">Ad Group</span>
+            </div>
+          `;
+        }).join('');
+      }
+    }
+
+    window.toggleEntitySelection = function(type, id) {
+      if (entitySelections[type].has(id)) {
+        entitySelections[type].delete(id);
+      } else {
+        entitySelections[type].add(id);
+      }
+      renderEntityList();
+    };
+
+    window.applyEntitySelection = function() {
+      // Get campaign data
+      let campaignMap = {};
+      try {
+        const tree = JSON.parse(localStorage.getItem('campaign_tree_groups') || '{}');
+        let allCams = [];
+        if (tree.campaigns) allCams = allCams.concat(tree.campaigns);
+        if (tree.groups) tree.groups.forEach(g => { if (g.campaigns) allCams = allCams.concat(g.campaigns); });
+        allCams.forEach(c => campaignMap[c.id] = c);
+      } catch {}
+
+      // Get ad group data
+      let adgroupMap = {};
+      try {
+        const all = JSON.parse(localStorage.getItem('adgroups_data_v1') || '[]');
+        all.forEach(ag => adgroupMap[ag.id] = ag);
+      } catch {}
+
+      // Keep the advertiser entity if it exists
+      const advEntity = co.entities ? co.entities.find(e => e.type === 'advertiser') : null;
+      
+      // Build new entities array
+      const newEntities = [];
+      
+      if (advEntity) {
+        newEntities.push(advEntity);
+      }
+
+      // Add selected campaigns
+      entitySelections.campaigns.forEach(camId => {
+        const cam = campaignMap[camId];
+        // Check if already exists with fields
+        const existing = co.entities ? co.entities.find(e => e.type === 'campaign' && e.id === camId) : null;
+        newEntities.push({
+          type: 'campaign',
+          id: camId,
+          name: cam ? cam.name : camId,
+          fields: existing ? existing.fields : {}
+        });
+      });
+
+      // Add selected ad groups
+      entitySelections.adgroups.forEach(agId => {
+        const ag = adgroupMap[agId];
+        // Check if already exists with fields
+        const existing = co.entities ? co.entities.find(e => e.type === 'adgroup' && e.id === agId) : null;
+        newEntities.push({
+          type: 'adgroup',
+          id: agId,
+          name: ag ? ag.name : agId,
+          fields: existing ? existing.fields : {}
+        });
+      });
+
+      // Update CO
+      co.entities = newEntities;
+      co.modifiedDate = new Date().toISOString();
+      saveChangeOrder(co);
+      buildEntitySections(co);
+      closeEntitySelectModal();
+      
+      if (typeof showToast === 'function') showToast('Entities updated', 'success');
+    };
+
+    // Close modal on backdrop click
+    document.getElementById('entitySelectModal').addEventListener('click', (e) => {
+      if (e.target.id === 'entitySelectModal') closeEntitySelectModal();
+    });
 
     // Waffle menu toggle
     const menuBtn = document.getElementById('menuButton');
