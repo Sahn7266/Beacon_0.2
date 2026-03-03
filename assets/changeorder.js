@@ -231,6 +231,7 @@ function populateCOPickerList() {
 
 /**
  * Create a new change order and navigate to it
+ * Now opens the Entity Select modal (Step 2) before redirecting
  */
 function createNewChangeOrder() {
   // Get advertiser info from localStorage
@@ -259,8 +260,281 @@ function createNewChangeOrder() {
     advertiserId: getSelectedAdvertiserId()
   };
   
-  saveChangeOrder(newCO);
+  // Store the new CO temporarily for the entity selection step
+  window._pendingNewCO = newCO;
+  
   closeCOPickerModal();
+  
+  // Open the Entity Tree Selector (Step 2) instead of navigating directly
+  openEntitySelectModal();
+}
+
+// ==================== ENTITY TREE SELECTOR (STEP 2) ====================
+
+/**
+ * Build the hierarchical entity tree HTML dynamically from localStorage
+ * @returns {string} HTML string for the entity tree
+ */
+function buildEntityTreeHTML() {
+  // 1. Get advertiser data
+  let adv = null;
+  try {
+    const raw = localStorage.getItem('adv_selected_data');
+    if (raw) adv = JSON.parse(raw);
+  } catch (e) {}
+
+  // Fallback to selectedAdvertiser if adv_selected_data not available
+  if (!adv) {
+    try {
+      const raw = localStorage.getItem('selectedAdvertiser');
+      if (raw) adv = JSON.parse(raw);
+    } catch (e) {}
+  }
+
+  const advName = (adv && adv.name) ? adv.name : 'Unknown Advertiser';
+
+  // 2. Get all campaigns for this advertiser
+  let campaigns = [];
+  try {
+    const tree = JSON.parse(localStorage.getItem('campaign_tree_groups') || '{}');
+    if (tree.campaigns) campaigns = campaigns.concat(tree.campaigns);
+    if (tree.groups) {
+      tree.groups.forEach(g => {
+        if (g.campaigns) campaigns = campaigns.concat(g.campaigns);
+      });
+    }
+  } catch (e) {}
+
+  // 3. Get all ad groups and build a map of campaignId → [adgroups]
+  let adgroupsByCampaign = {};
+  try {
+    const allAdgroups = JSON.parse(localStorage.getItem('adgroups_data_v1') || '[]');
+    const campaignIds = new Set(campaigns.map(c => c.id));
+    allAdgroups.forEach(ag => {
+      const camId = ag.campaign || ag.campaignId;
+      if (camId && campaignIds.has(camId)) {
+        if (!adgroupsByCampaign[camId]) adgroupsByCampaign[camId] = [];
+        adgroupsByCampaign[camId].push(ag);
+      }
+    });
+  } catch (e) {}
+
+  // 4. Build the HTML tree
+  let html = '<ul class="space-y-1">';
+
+  // Advertiser row (always checked, disabled)
+  html += `
+    <li class="flex items-center gap-2 px-2 py-1.5 rounded-md opacity-60">
+      <input type="checkbox" checked disabled class="w-4 h-4 accent-blue-600">
+      <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide bg-blue-100 text-blue-900">ADV</span>
+      <span class="text-sm font-semibold text-gray-800">${advName}</span>
+      <span class="text-[10px] text-gray-400 ml-1">(always included)</span>
+    </li>`;
+
+  // Campaign rows with nested ad groups
+  campaigns.forEach((cam, idx) => {
+    const camChildrenId = 'entityTree-cam' + idx + '-children';
+    const camName = cam.name || cam.id || 'Unnamed Campaign';
+    const childAGs = adgroupsByCampaign[cam.id] || [];
+
+    html += `
+    <li class="ml-5">
+      <div class="flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-gray-50">
+        <input type="checkbox" checked class="w-4 h-4 accent-blue-600 entity-tree-cam-check"
+               data-cam-id="${cam.id}" data-children="${camChildrenId}">
+        <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide bg-purple-100 text-purple-800">CAM</span>
+        <span class="text-sm text-gray-800">${camName}</span>
+      </div>
+      <div id="${camChildrenId}" class="ml-8 space-y-0.5">`;
+
+    if (childAGs.length === 0) {
+      html += `<div class="px-2 py-1 text-xs text-gray-400 italic">No ad groups</div>`;
+    } else {
+      childAGs.forEach(ag => {
+        const agName = ag.name || ag.id || 'Unnamed Ad Group';
+        html += `
+        <div class="flex items-center gap-2 px-2 py-1 rounded-md hover:bg-gray-50">
+          <input type="checkbox" checked class="w-4 h-4 accent-blue-600 entity-tree-ag-check" data-ag-id="${ag.id}" data-cam-id="${cam.id}">
+          <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide bg-orange-100 text-orange-800">AG</span>
+          <span class="text-xs text-gray-600">${agName}</span>
+        </div>`;
+      });
+    }
+
+    html += `</div></li>`;
+  });
+
+  // Handle case: no campaigns at all
+  if (campaigns.length === 0) {
+    html += `<li class="ml-5 px-2 py-3 text-sm text-gray-400 italic">No campaigns found for this advertiser.</li>`;
+  }
+
+  html += '</ul>';
+  return html;
+}
+
+/**
+ * Inject the Entity Select Modal HTML into the page if it doesn't already exist
+ */
+function ensureEntitySelectModal() {
+  if (document.getElementById('entitySelectModal')) return;
+
+  const modalHTML = `
+  <div id="entitySelectModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 hidden">
+    <div class="bg-white rounded-lg shadow-lg w-full max-w-xl mx-4 overflow-hidden">
+      <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+        <h2 class="text-lg font-semibold text-gray-900">Select Records to Include</h2>
+        <button class="text-gray-400 hover:text-gray-600 transition-colors"
+          onclick="closeEntitySelectModal()" aria-label="Close">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>
+      <div class="px-6 py-4 max-h-[60vh] overflow-y-auto">
+        <p class="text-sm text-gray-500 mb-4">Choose which Campaigns and Ad Groups to include in this Change Order. The Advertiser is always included.</p>
+        <div id="entityTreeContainer">
+          <!-- Dynamically populated -->
+        </div>
+      </div>
+      <div class="flex justify-end gap-2 px-6 py-3 bg-gray-50 border-t border-gray-200">
+        <button class="px-4 py-2 text-sm text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+          onclick="closeEntitySelectModal()">Cancel</button>
+        <button id="entityTreeConfirmBtn" class="px-4 py-2 text-sm text-white bg-green-600 border border-green-600 rounded-md hover:bg-green-700"
+          onclick="confirmEntityTreeSelection()">Create Change Order</button>
+      </div>
+    </div>
+  </div>`;
+
+  document.body.insertAdjacentHTML('beforeend', modalHTML);
+}
+
+/**
+ * Open the Entity Select Modal (Step 2)
+ */
+function openEntitySelectModal() {
+  ensureEntitySelectModal();
+  const container = document.getElementById('entityTreeContainer');
+  container.innerHTML = buildEntityTreeHTML();
+  document.getElementById('entitySelectModal').classList.remove('hidden');
+
+  // Wire up campaign checkbox toggles
+  document.querySelectorAll('.entity-tree-cam-check').forEach(cb => {
+    cb.addEventListener('change', function() {
+      const childrenId = this.getAttribute('data-children');
+      if (childrenId) {
+        document.querySelectorAll('#' + childrenId + ' input[type="checkbox"]').forEach(c => {
+          c.checked = this.checked;
+        });
+      }
+    });
+  });
+}
+
+/**
+ * Close the Entity Select Modal
+ */
+function closeEntitySelectModal() {
+  const modal = document.getElementById('entitySelectModal');
+  if (modal) modal.classList.add('hidden');
+  
+  // Clear the pending CO if user cancels
+  window._pendingNewCO = null;
+}
+
+/**
+ * Collect selected entities from the tree and proceed with CO creation
+ */
+function confirmEntityTreeSelection() {
+  const selectedCampaigns = [];
+  const selectedAdGroups = [];
+
+  document.querySelectorAll('.entity-tree-cam-check:checked').forEach(cb => {
+    selectedCampaigns.push(cb.getAttribute('data-cam-id'));
+  });
+
+  document.querySelectorAll('.entity-tree-ag-check:checked').forEach(cb => {
+    selectedAdGroups.push({
+      id: cb.getAttribute('data-ag-id'),
+      campaignId: cb.getAttribute('data-cam-id')
+    });
+  });
+
+  // Store selections in localStorage for ChangeOrderDetail.html to pick up
+  localStorage.setItem('co_selected_entities', JSON.stringify({
+    campaigns: selectedCampaigns,
+    adgroups: selectedAdGroups
+  }));
+
+  closeEntitySelectModal();
+
+  // Now proceed with the CO creation and redirect
+  proceedWithCOCreation();
+}
+
+/**
+ * Complete the CO creation process and redirect to ChangeOrderDetail
+ */
+function proceedWithCOCreation() {
+  const newCO = window._pendingNewCO;
+  
+  if (!newCO) {
+    console.warn('No pending CO found');
+    return;
+  }
+  
+  // Get selected entities from localStorage
+  let selectedEntities = { campaigns: [], adgroups: [] };
+  try {
+    const raw = localStorage.getItem('co_selected_entities');
+    if (raw) selectedEntities = JSON.parse(raw);
+  } catch (e) {}
+  
+  // Get campaign and ad group data for names
+  let campaignMap = {};
+  let adgroupMap = {};
+  
+  try {
+    const tree = JSON.parse(localStorage.getItem('campaign_tree_groups') || '{}');
+    let allCams = [];
+    if (tree.campaigns) allCams = allCams.concat(tree.campaigns);
+    if (tree.groups) tree.groups.forEach(g => { if (g.campaigns) allCams = allCams.concat(g.campaigns); });
+    allCams.forEach(c => campaignMap[c.id] = c);
+  } catch (e) {}
+  
+  try {
+    const all = JSON.parse(localStorage.getItem('adgroups_data_v1') || '[]');
+    all.forEach(ag => adgroupMap[ag.id] = ag);
+  } catch (e) {}
+  
+  // Add selected campaigns as entities
+  selectedEntities.campaigns.forEach(camId => {
+    const cam = campaignMap[camId];
+    newCO.entities.push({
+      type: 'campaign',
+      id: camId,
+      name: cam ? cam.name : camId,
+      fields: {}
+    });
+  });
+  
+  // Add selected ad groups as entities
+  selectedEntities.adgroups.forEach(agInfo => {
+    const ag = adgroupMap[agInfo.id];
+    newCO.entities.push({
+      type: 'adgroup',
+      id: agInfo.id,
+      name: ag ? ag.name : agInfo.id,
+      fields: {}
+    });
+  });
+  
+  // Save the CO with all entities
+  saveChangeOrder(newCO);
+  
+  // Clear pending data
+  window._pendingNewCO = null;
+  localStorage.removeItem('co_selected_entities');
   
   // Show success toast if available
   if (typeof showToast === 'function') {
@@ -419,3 +693,11 @@ window.closeCOPickerModal = closeCOPickerModal;
 window.createNewChangeOrder = createNewChangeOrder;
 window.addToChangeOrder = addToChangeOrder;
 window.generateCOId = generateCOId;
+
+// Entity Tree Selector functions (Step 2 of CO creation)
+window.buildEntityTreeHTML = buildEntityTreeHTML;
+window.ensureEntitySelectModal = ensureEntitySelectModal;
+window.openEntitySelectModal = openEntitySelectModal;
+window.closeEntitySelectModal = closeEntitySelectModal;
+window.confirmEntityTreeSelection = confirmEntityTreeSelection;
+window.proceedWithCOCreation = proceedWithCOCreation;

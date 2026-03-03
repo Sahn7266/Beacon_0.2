@@ -228,27 +228,29 @@
     </main>
   </div>
 
-  <!-- Entity Select Modal -->
+  <!-- Entity Select Modal (Tree-based) -->
   <div id="entitySelectModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center">
-    <div class="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[80vh] flex flex-col">
-      <div class="p-4 border-b border-gray-200 flex items-center justify-between">
-        <h2 class="text-lg font-semibold text-gray-800">Manage Entities</h2>
-        <button onclick="closeEntitySelectModal()" class="text-gray-400 hover:text-gray-600 text-2xl leading-none">&times;</button>
+    <div class="bg-white rounded-lg shadow-lg w-full max-w-xl mx-4 overflow-hidden">
+      <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+        <h2 class="text-lg font-semibold text-gray-900">Manage Entities</h2>
+        <button class="text-gray-400 hover:text-gray-600 transition-colors"
+          onclick="closeEntitySelectModal()" aria-label="Close">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
       </div>
-      <div class="p-4 border-b border-gray-200 bg-gray-50">
-        <div class="flex gap-2">
-          <button id="tabCampaigns" onclick="switchEntityTab('campaigns')" class="px-4 py-2 text-sm font-medium rounded-md bg-purple-100 text-purple-800">Campaigns</button>
-          <button id="tabAdGroups" onclick="switchEntityTab('adgroups')" class="px-4 py-2 text-sm font-medium rounded-md bg-gray-200 text-gray-600 hover:bg-gray-300">Ad Groups</button>
+      <div class="px-6 py-4 max-h-[60vh] overflow-y-auto">
+        <p class="text-sm text-gray-500 mb-4">Choose which Campaigns and Ad Groups to include in this Change Order. The Advertiser is always included.</p>
+        <div id="entityTreeContainer">
+          <!-- Dynamically populated by JS -->
         </div>
       </div>
-      <div class="flex-1 overflow-y-auto p-4">
-        <div id="entityListContainer">
-          <p class="text-gray-500 text-center py-4">Loading entities...</p>
-        </div>
-      </div>
-      <div class="p-4 border-t border-gray-200 flex justify-end gap-2">
-        <button onclick="closeEntitySelectModal()" class="px-4 py-2 text-sm bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200">Close</button>
-        <button onclick="applyEntitySelection()" class="px-4 py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700">Apply Changes</button>
+      <div class="flex justify-end gap-2 px-6 py-3 bg-gray-50 border-t border-gray-200">
+        <button class="px-4 py-2 text-sm text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+          onclick="closeEntitySelectModal()">Cancel</button>
+        <button class="px-4 py-2 text-sm text-white bg-blue-600 border border-blue-600 rounded-md hover:bg-blue-700"
+          onclick="applyEntityTreeSelection()">Apply Changes</button>
       </div>
     </div>
   </div>
@@ -383,7 +385,7 @@
     });
 
     document.getElementById('manageEntitiesBtn').addEventListener('click', () => {
-      openEntitySelectModal(co.id);
+      openEntitySelectModal();
     });
 
     // --- Helper functions ---
@@ -599,132 +601,132 @@
       if (typeof showToast === 'function') showToast(`${type} removed`, 'info');
     };
 
-    // ========== ENTITY SELECT MODAL FUNCTIONS ==========
-    let currentEntityTab = 'campaigns';
-    let entitySelections = { campaigns: new Set(), adgroups: new Set() };
+    // ========== ENTITY SELECT MODAL FUNCTIONS (TREE VERSION) ==========
 
-    // Initialize selections from current CO entities
-    function initEntitySelections() {
-      entitySelections = { campaigns: new Set(), adgroups: new Set() };
+    function buildEntityTreeForManage() {
+      // Get advertiser data
+      let advData = null;
+      try {
+        const raw = localStorage.getItem('adv_selected_data');
+        if (raw) advData = JSON.parse(raw);
+      } catch (e) {}
+      if (!advData) {
+        try {
+          const raw = localStorage.getItem('selectedAdvertiser');
+          if (raw) advData = JSON.parse(raw);
+        } catch (e) {}
+      }
+      const advName = (advData && advData.name) ? advData.name : (adv && adv.name) ? adv.name : 'Unknown Advertiser';
+
+      // Get all available campaigns
+      let campaigns = [];
+      try {
+        const tree = JSON.parse(localStorage.getItem('campaign_tree_groups') || '{}');
+        if (tree.campaigns) campaigns = campaigns.concat(tree.campaigns);
+        if (tree.groups) tree.groups.forEach(g => { if (g.campaigns) campaigns = campaigns.concat(g.campaigns); });
+      } catch (e) {}
+
+      // Get all ad groups mapped by campaign
+      let adgroupsByCampaign = {};
+      try {
+        const allAdgroups = JSON.parse(localStorage.getItem('adgroups_data_v1') || '[]');
+        const campaignIds = new Set(campaigns.map(c => c.id));
+        allAdgroups.forEach(ag => {
+          const camId = ag.campaign || ag.campaignId;
+          if (camId && campaignIds.has(camId)) {
+            if (!adgroupsByCampaign[camId]) adgroupsByCampaign[camId] = [];
+            adgroupsByCampaign[camId].push(ag);
+          }
+        });
+      } catch (e) {}
+
+      // Determine which entities are already in the CO
+      const selectedCamIds = new Set();
+      const selectedAgIds = new Set();
       if (co.entities) {
         co.entities.forEach(e => {
-          if (e.type === 'campaign') entitySelections.campaigns.add(e.id);
-          if (e.type === 'adgroup') entitySelections.adgroups.add(e.id);
+          if (e.type === 'campaign') selectedCamIds.add(e.id);
+          if (e.type === 'adgroup') selectedAgIds.add(e.id);
         });
       }
+
+      // Build tree HTML
+      let html = '<ul class="space-y-1">';
+
+      // Advertiser (always included)
+      html += `
+        <li class="flex items-center gap-2 px-2 py-1.5 rounded-md opacity-60">
+          <input type="checkbox" checked disabled class="w-4 h-4 accent-blue-600">
+          <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide bg-blue-100 text-blue-900">ADV</span>
+          <span class="text-sm font-semibold text-gray-800">${advName}</span>
+          <span class="text-[10px] text-gray-400 ml-1">(always included)</span>
+        </li>`;
+
+      campaigns.forEach((cam, idx) => {
+        const camChildrenId = 'manageTree-cam' + idx + '-children';
+        const camName = cam.name || cam.id;
+        const isCamSelected = selectedCamIds.has(cam.id);
+        const childAGs = adgroupsByCampaign[cam.id] || [];
+
+        html += `
+        <li class="ml-5">
+          <div class="flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-gray-50">
+            <input type="checkbox" ${isCamSelected ? 'checked' : ''} class="w-4 h-4 accent-blue-600 manage-tree-cam-check"
+                   data-cam-id="${cam.id}" data-children="${camChildrenId}">
+            <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide bg-purple-100 text-purple-800">CAM</span>
+            <span class="text-sm text-gray-800">${camName}</span>
+          </div>
+          <div id="${camChildrenId}" class="ml-8 space-y-0.5">`;
+
+        if (childAGs.length === 0) {
+          html += `<div class="px-2 py-1 text-xs text-gray-400 italic">No ad groups</div>`;
+        } else {
+          childAGs.forEach(ag => {
+            const agName = ag.name || ag.id;
+            const isAgSelected = selectedAgIds.has(ag.id);
+            html += `
+            <div class="flex items-center gap-2 px-2 py-1 rounded-md hover:bg-gray-50">
+              <input type="checkbox" ${isAgSelected ? 'checked' : ''} class="w-4 h-4 accent-blue-600 manage-tree-ag-check" data-ag-id="${ag.id}" data-cam-id="${cam.id}">
+              <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide bg-orange-100 text-orange-800">AG</span>
+              <span class="text-xs text-gray-600">${agName}</span>
+            </div>`;
+          });
+        }
+        html += `</div></li>`;
+      });
+
+      if (campaigns.length === 0) {
+        html += `<li class="ml-5 px-2 py-3 text-sm text-gray-400 italic">No campaigns found for this advertiser.</li>`;
+      }
+
+      html += '</ul>';
+      return html;
     }
 
-    window.openEntitySelectModal = function(coId) {
-      initEntitySelections();
+    window.openEntitySelectModal = function() {
+      const container = document.getElementById('entityTreeContainer');
+      container.innerHTML = buildEntityTreeForManage();
       document.getElementById('entitySelectModal').classList.remove('hidden');
-      switchEntityTab('campaigns');
+
+      // Wire up campaign checkbox toggles
+      document.querySelectorAll('.manage-tree-cam-check').forEach(cb => {
+        cb.addEventListener('change', function() {
+          const childrenId = this.getAttribute('data-children');
+          if (childrenId) {
+            document.querySelectorAll('#' + childrenId + ' input[type="checkbox"]').forEach(c => {
+              c.checked = this.checked;
+            });
+          }
+        });
+      });
     };
 
     window.closeEntitySelectModal = function() {
       document.getElementById('entitySelectModal').classList.add('hidden');
     };
 
-    window.switchEntityTab = function(tab) {
-      currentEntityTab = tab;
-      
-      // Update tab button styles
-      const tabCam = document.getElementById('tabCampaigns');
-      const tabAG = document.getElementById('tabAdGroups');
-      
-      if (tab === 'campaigns') {
-        tabCam.className = 'px-4 py-2 text-sm font-medium rounded-md bg-purple-100 text-purple-800';
-        tabAG.className = 'px-4 py-2 text-sm font-medium rounded-md bg-gray-200 text-gray-600 hover:bg-gray-300';
-      } else {
-        tabCam.className = 'px-4 py-2 text-sm font-medium rounded-md bg-gray-200 text-gray-600 hover:bg-gray-300';
-        tabAG.className = 'px-4 py-2 text-sm font-medium rounded-md bg-amber-100 text-amber-800';
-      }
-      
-      renderEntityList();
-    };
-
-    function renderEntityList() {
-      const container = document.getElementById('entityListContainer');
-      
-      if (currentEntityTab === 'campaigns') {
-        // Load campaigns from localStorage
-        let campaigns = [];
-        try {
-          const tree = JSON.parse(localStorage.getItem('campaign_tree_groups') || '{}');
-          if (tree.campaigns) campaigns = campaigns.concat(tree.campaigns);
-          if (tree.groups) tree.groups.forEach(g => { if (g.campaigns) campaigns = campaigns.concat(g.campaigns); });
-        } catch {}
-
-        if (campaigns.length === 0) {
-          container.innerHTML = '<p class="text-gray-500 text-center py-8">No campaigns available for this advertiser.</p>';
-          return;
-        }
-
-        container.innerHTML = campaigns.map(c => {
-          const isSelected = entitySelections.campaigns.has(c.id);
-          return `
-            <div class="flex items-center gap-3 p-3 border border-gray-200 rounded-md mb-2 hover:bg-gray-50 cursor-pointer ${isSelected ? 'bg-purple-50 border-purple-300' : ''}" onclick="toggleEntitySelection('campaigns', '${c.id}')">
-              <input type="checkbox" ${isSelected ? 'checked' : ''} class="w-4 h-4 text-purple-600 pointer-events-none" />
-              <div class="flex-1">
-                <div class="font-medium text-gray-800">${c.name || c.id}</div>
-                <div class="text-xs text-gray-500">ID: ${c.id} ${c.dsp ? '• DSP: ' + c.dsp : ''}</div>
-              </div>
-              <span class="text-xs px-2 py-0.5 rounded bg-purple-100 text-purple-700">Campaign</span>
-            </div>
-          `;
-        }).join('');
-      } else {
-        // Load ad groups from localStorage - but only those belonging to this advertiser's campaigns
-        let adgroups = [];
-        try {
-          // First, get all campaign IDs for this advertiser
-          const advertiserCampaignIds = new Set();
-          const tree = JSON.parse(localStorage.getItem('campaign_tree_groups') || '{}');
-          if (tree.campaigns) tree.campaigns.forEach(c => advertiserCampaignIds.add(c.id));
-          if (tree.groups) tree.groups.forEach(g => { 
-            if (g.campaigns) g.campaigns.forEach(c => advertiserCampaignIds.add(c.id)); 
-          });
-          
-          // Then filter ad groups to only those belonging to this advertiser's campaigns
-          const allAdgroups = JSON.parse(localStorage.getItem('adgroups_data_v1') || '[]');
-          adgroups = allAdgroups.filter(ag => {
-            const agCampaignId = ag.campaign || ag.campaignId;
-            return agCampaignId && advertiserCampaignIds.has(agCampaignId);
-          });
-        } catch {}
-
-        if (adgroups.length === 0) {
-          container.innerHTML = '<p class="text-gray-500 text-center py-8">No ad groups available for this advertiser.</p>';
-          return;
-        }
-
-        container.innerHTML = adgroups.map(ag => {
-          const isSelected = entitySelections.adgroups.has(ag.id);
-          const campaignName = ag.campaign || ag.campaignId || '';
-          return `
-            <div class="flex items-center gap-3 p-3 border border-gray-200 rounded-md mb-2 hover:bg-gray-50 cursor-pointer ${isSelected ? 'bg-amber-50 border-amber-300' : ''}" onclick="toggleEntitySelection('adgroups', '${ag.id}')">
-              <input type="checkbox" ${isSelected ? 'checked' : ''} class="w-4 h-4 text-amber-600 pointer-events-none" />
-              <div class="flex-1">
-                <div class="font-medium text-gray-800">${ag.name || ag.id}</div>
-                <div class="text-xs text-gray-500">ID: ${ag.id} ${campaignName ? '• Campaign: ' + campaignName : ''} ${ag.classification ? '• ' + ag.classification : ''}</div>
-              </div>
-              <span class="text-xs px-2 py-0.5 rounded bg-amber-100 text-amber-700">Ad Group</span>
-            </div>
-          `;
-        }).join('');
-      }
-    }
-
-    window.toggleEntitySelection = function(type, id) {
-      if (entitySelections[type].has(id)) {
-        entitySelections[type].delete(id);
-      } else {
-        entitySelections[type].add(id);
-      }
-      renderEntityList();
-    };
-
-    window.applyEntitySelection = function() {
-      // Get campaign data
+    window.applyEntityTreeSelection = function() {
+      // Get campaign data for name lookups
       let campaignMap = {};
       try {
         const tree = JSON.parse(localStorage.getItem('campaign_tree_groups') || '{}');
@@ -732,19 +734,17 @@
         if (tree.campaigns) allCams = allCams.concat(tree.campaigns);
         if (tree.groups) tree.groups.forEach(g => { if (g.campaigns) allCams = allCams.concat(g.campaigns); });
         allCams.forEach(c => campaignMap[c.id] = c);
-      } catch {}
+      } catch (e) {}
 
-      // Get ad group data
+      // Get ad group data for name lookups
       let adgroupMap = {};
       try {
         const all = JSON.parse(localStorage.getItem('adgroups_data_v1') || '[]');
         all.forEach(ag => adgroupMap[ag.id] = ag);
-      } catch {}
+      } catch (e) {}
 
-      // Keep the advertiser entity if it exists, or create one
+      // Keep the advertiser entity
       let advEntity = co.entities ? co.entities.find(e => e.type === 'advertiser') : null;
-      
-      // If no advertiser entity exists, create one from adv data
       if (!advEntity && adv) {
         advEntity = {
           type: 'advertiser',
@@ -753,18 +753,14 @@
           fields: {}
         };
       }
-      
-      // Build new entities array
-      const newEntities = [];
-      
-      if (advEntity) {
-        newEntities.push(advEntity);
-      }
 
-      // Add selected campaigns
-      entitySelections.campaigns.forEach(camId => {
+      const newEntities = [];
+      if (advEntity) newEntities.push(advEntity);
+
+      // Collect checked campaigns
+      document.querySelectorAll('.manage-tree-cam-check:checked').forEach(cb => {
+        const camId = cb.getAttribute('data-cam-id');
         const cam = campaignMap[camId];
-        // Check if already exists with fields
         const existing = co.entities ? co.entities.find(e => e.type === 'campaign' && e.id === camId) : null;
         newEntities.push({
           type: 'campaign',
@@ -774,10 +770,10 @@
         });
       });
 
-      // Add selected ad groups
-      entitySelections.adgroups.forEach(agId => {
+      // Collect checked ad groups
+      document.querySelectorAll('.manage-tree-ag-check:checked').forEach(cb => {
+        const agId = cb.getAttribute('data-ag-id');
         const ag = adgroupMap[agId];
-        // Check if already exists with fields
         const existing = co.entities ? co.entities.find(e => e.type === 'adgroup' && e.id === agId) : null;
         newEntities.push({
           type: 'adgroup',
@@ -793,7 +789,7 @@
       saveChangeOrder(co);
       buildEntitySections(co);
       closeEntitySelectModal();
-      
+
       if (typeof showToast === 'function') showToast('Entities updated', 'success');
     };
 
