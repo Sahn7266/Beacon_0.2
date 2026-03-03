@@ -233,6 +233,21 @@ function populateCOPickerList() {
  * Create a new change order and navigate to it
  */
 function createNewChangeOrder() {
+  // Get advertiser info from localStorage
+  let advData = null;
+  try {
+    const raw = localStorage.getItem('adv_selected_data');
+    if (raw) advData = JSON.parse(raw);
+  } catch {}
+
+  // Create advertiser entity
+  const advertiserEntity = advData ? {
+    type: 'advertiser',
+    id: advData.id || advData.advertiserId || 'unknown',
+    name: advData.name || 'Unknown Advertiser',
+    fields: {}
+  } : null;
+
   const newCO = {
     id: generateCOId(),
     name: 'New Change Order',
@@ -240,7 +255,7 @@ function createNewChangeOrder() {
     createdDate: new Date().toISOString(),
     modifiedDate: new Date().toISOString(),
     owner: 'Current User', // Would be replaced with actual user
-    entities: [],
+    entities: advertiserEntity ? [advertiserEntity] : [],
     advertiserId: getSelectedAdvertiserId()
   };
   

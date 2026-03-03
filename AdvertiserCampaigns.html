@@ -496,10 +496,17 @@
                 </div>
 
                 <!-- New Change Order Button -->
-                <button id="newChangeOrderBtn" onclick="openCOPickerModal()" class="flex items-center gap-2 px-3 py-2 text-sm bg-green-600 text-white border border-green-600 rounded-md hover:bg-green-700 transition-colors ml-auto" title="New Change Order">
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                  <span>New Change Order</span>
+                <div class="flex-1"></div>
+                <button id="newChangeOrderBtn"
+                  class="flex items-center gap-1.5 h-8 px-3 rounded-md text-sm font-medium text-white bg-green-600 hover:bg-green-700 transition-colors"
+                  onclick="openCOPickerModal()"
+                  title="Create New Change Order">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                  </svg>
+                  New Change Order
                 </button>
+                <div class="w-1"></div>
 
                 <!-- Universal Export Button -->
                 <button id="universalExportBtn" class="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors mr-2" title="Export all campaigns and ad groups">

@@ -22,31 +22,101 @@
     .toggle-arrow.open { transform: rotate(90deg); }
   </style>
 </head>
-<body class="bg-gray-100 flex flex-col h-screen overflow-hidden">
 
-  <!-- Top Header Bar -->
-  <header class="text-white flex-shrink-0" style="background: var(--brand-800);">
-    <div class="flex items-center justify-between px-6 py-1">
-      <div class="flex items-center gap-3">
-        <img src="./assets/Eye_Multiview.png" alt="Multiview Logo" class="h-8" />
-        <h1 class="text-xl font-medium">Beacon</h1>
-      </div>
-      <nav class="flex items-center gap-4">
-        <div class="relative">
-          <button class="p-0 rounded-md text-white" id="menuButton" title="Menu" aria-label="Open navigation menu">
-            <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 20 20">
-              <path d="M4 4h3v3H4V4zM8.5 4h3v3h-3V4zM13 4h3v3h-3V4zM4 8.5h3v3H4v-3zM8.5 8.5h3v3h-3V8.5zM13 8.5h3v3h-3V8.5zM4 13h3v3H4v-3zM8.5 13h3v3h-3V13zM13 13h3v3h-3V13z"></path>
-            </svg>
-          </button>
-          <div id="menuDropdown" class="hidden absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-md shadow-lg z-50">
-            <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Advertisers</a>
-            <a href="./Admin_Users.html" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Admin</a>
-            <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Sign Out</a>
-          </div>
+<body class="bg-gray-100">
+  <div class="flex h-screen flex-col">
+    <!-- Header -->
+    <header class="border-b border-gray-200 shadow-sm" style="background-color: #004E8B;">
+      <div class="flex items-center justify-between px-4 py-2">
+        <div class="flex items-center gap-3">
+          <img src="./assets/Beaconlogo.svg" alt="Beacon Logo" class="h-12 w-auto" />
         </div>
-      </nav>
-    </div>
-  </header>
+
+        <nav class="flex items-center gap-3 ml-auto">
+            <a href="./index.html" class="text-base text-white hover:text-blue-100" style="font-size: 1.5rem; padding-right: 15px;" onmouseover="this.style.color='#48A9FE'" onmouseout="this.style.color='white'">
+            Advertisers
+            </a>
+          <span class="text-white select-none">|</span>
+
+          <!-- Notifications -->
+          <div class="relative">
+            <button id="notificationButton" class="p-2 rounded-md  text-white relative" title="Notifications" aria-label="View notifications" onmouseover="this.style.backgroundColor=''" onmouseout="this.style.backgroundColor=''" >
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
+              </svg>
+              <span id="notificationDot" class="absolute top-2 right-2 w-3 h-3 bg-red-500 rounded-full border-2 border-white"></span>
+            </button>
+
+            <!-- Dropdown -->
+            <div id="notificationDropdown" class="hidden absolute right-0 mt-2 w-80 bg-white border border-gray-200 rounded-md shadow-lg z-50 max-h-96 overflow-hidden">
+              <div class="p-3 border-b border-gray-200 bg-gray-50">
+                <div class="flex items-center justify-between">
+                  <h3 class="text-sm font-semibold text-gray-900">Notifications</h3>
+                  <button id="markAllReadBtn" class="text-xs text-blue-600 hover:text-blue-800">Mark all read</button>
+                </div>
+              </div>
+
+              <div class="max-h-80 overflow-y-auto">
+                <div id="notificationList">
+                  <!-- Sample items -->
+                  <div class="p-3 border-b border-gray-100 hover:bg-gray-50 cursor-pointer notification-item" data-read="false">
+                    <div class="flex items-start gap-3">
+                      <div class="flex-shrink-0 w-2 h-2 bg-blue-500 rounded-full mt-2"></div>
+                      <div class="flex-1 min-w-0">
+                        <p class="text-sm font-medium text-gray-900">Campaign Performance Alert</p>
+                        <p class="text-xs text-gray-500 mt-1">"Summer Sale" exceeded budget by 15%</p>
+                        <p class="text-xs text-gray-400 mt-1">2 minutes ago</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="p-3 border-b border-gray-100 hover:bg-gray-50 cursor-pointer notification-item" data-read="false">
+                    <div class="flex items-start gap-3">
+                      <div class="flex-shrink-0 w-2 h-2 bg-green-500 rounded-full mt-2"></div>
+                      <div class="flex-1 min-w-0">
+                        <p class="text-sm font-medium text-gray-900">New Advertiser Added</p>
+                        <p class="text-xs text-gray-500 mt-1">Stallion Services LLC onboarded</p>
+                        <p class="text-xs text-gray-400 mt-1">1 hour ago</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="p-3 border-b border-gray-100 hover:bg-gray-50 cursor-pointer notification-item" data-read="true">
+                    <div class="flex items-start gap-3">
+                      <div class="flex-shrink-0 w-2 h-2 bg-gray-300 rounded-full mt-2"></div>
+                      <div class="flex-1 min-w-0">
+                        <p class="text-sm text-gray-700">Account Sync Complete</p>
+                        <p class="text-xs text-gray-500 mt-1">CRM sync finished for 12 accounts</p>
+                        <p class="text-xs text-gray-400 mt-1">3 hours ago</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="p-3 text-center border-t border-gray-200">
+                  <a href="#" class="text-sm text-blue-600 hover:text-blue-800 font-medium">View all notifications</a>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Waffle Menu -->
+          <div class="relative">
+            <button class="p-0 rounded-md text-white" id="menuButton" title="Menu" aria-label="Open navigation menu">
+              <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M4 4h3v3H4V4zM8.5 4h3v3h-3V4zM13 4h3v3h-3V4zM4 8.5h3v3H4v-3zM8.5 8.5h3v3h-3V8.5zM13 8.5h3v3h-3V8.5zM4 13h3v3H4v-3zM8.5 13h3v3h-3V13zM13 13h3v3h-3V13z"></path>
+              </svg>
+            </button>
+            <div id="menuDropdown" class="hidden absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-md shadow-lg">
+              <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Advertisers</a>
+              <a href="#" id="menuProfile" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Profile</a>
+              <a href="./Admin_Users.html" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Admin</a>
+              <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Sign Out</a>
+            </div>
+          </div>
+        </nav>
+      </div>
+    </header>
 
   <!-- Breadcrumb Bar -->
   <div class="bg-white border-b border-gray-200 px-6 py-2">
@@ -95,8 +165,8 @@
         </li>
         <li>
           <a href="./ChangeOrderList.html" data-nav-link class="flex items-center px-1 py-2 text-sm text-gray-700 hover:bg-blue-50 rounded-md">
-            <svg class="w-6 h-6 mr-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 17l-5-5m0 0l5-5m-5 5h12"/></svg>
-            <span data-link-label>Back to List</span>
+            <!-- <svg class="w-6 h-6 mr-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 17l-5-5m0 0l5-5m-5 5h12"/></svg> -->
+            <!-- <span data-link-label>Back to List</span> -->
           </a>
         </li>
       </ul>
@@ -219,6 +289,20 @@
       return;
     }
 
+    // Ensure advertiser entity exists
+    if (!co.entities) co.entities = [];
+    const hasAdvertiser = co.entities.some(e => e.type === 'advertiser');
+    if (!hasAdvertiser && adv) {
+      co.entities.unshift({
+        type: 'advertiser',
+        id: adv.id || adv.advertiserId || 'unknown',
+        name: adv.name || 'Unknown Advertiser',
+        fields: {}
+      });
+      // Save the updated CO with the advertiser
+      saveChangeOrder(co);
+    }
+
     // Populate header
     document.getElementById('breadcrumbCOId').textContent = co.id;
     document.getElementById('headerCOId').textContent = co.id;
@@ -241,6 +325,27 @@
       co.name = document.getElementById('coNameInput').value.trim() || co.name;
       co.generalNotes = document.getElementById('generalNotes').value;
       co.modifiedDate = new Date().toISOString();
+
+      // Collect advertiser field values
+      document.querySelectorAll('[data-adv-field]').forEach(input => {
+        const field = input.dataset.advField;
+        const entity = co.entities.find(e => e.type === 'advertiser');
+        if (entity) {
+          if (!entity.fields) entity.fields = {};
+          entity.fields[field] = input.value;
+        }
+      });
+
+      // Collect campaign field values
+      document.querySelectorAll('[data-cam-field]').forEach(input => {
+        const camId = input.dataset.camId;
+        const field = input.dataset.camField;
+        const entity = co.entities.find(e => e.type === 'campaign' && e.id === camId);
+        if (entity) {
+          if (!entity.fields) entity.fields = {};
+          entity.fields[field] = input.value;
+        }
+      });
 
       // Collect ad group field values
       document.querySelectorAll('[data-ag-field]').forEach(input => {
@@ -343,12 +448,34 @@
 
     function buildEntityBody(entity) {
       if (entity.type === 'advertiser') {
+        const fields = entity.fields || {};
         return `
-          <div class="flex gap-8 text-sm text-gray-600 mb-2">
+          <div class="flex gap-8 text-sm text-gray-600 mb-4">
             <span><strong>Account #:</strong> ${adv ? (adv.account || adv.accountNumber || '—') : '—'}</span>
             <span><strong>Name:</strong> ${entity.name || '—'}</span>
           </div>
-          <p class="text-sm text-gray-400 italic">No changes requested at the advertiser level.</p>
+          <div class="co-fields-grid">
+            <div class="co-field-group">
+              <label>Contact Name</label>
+              <input type="text" value="${fields.contactName || ''}" placeholder="Primary contact" data-adv-field="contactName" class="w-full border border-gray-300 rounded-md px-2 py-1 text-sm" />
+            </div>
+            <div class="co-field-group">
+              <label>Contact Email</label>
+              <input type="email" value="${fields.contactEmail || ''}" placeholder="email@example.com" data-adv-field="contactEmail" class="w-full border border-gray-300 rounded-md px-2 py-1 text-sm" />
+            </div>
+            <div class="co-field-group">
+              <label>Billing Address</label>
+              <input type="text" value="${fields.billingAddress || ''}" placeholder="Street address" data-adv-field="billingAddress" class="w-full border border-gray-300 rounded-md px-2 py-1 text-sm" />
+            </div>
+            <div class="co-field-group">
+              <label>Industry/Vertical</label>
+              <input type="text" value="${fields.industry || ''}" placeholder="e.g. Healthcare, Retail" data-adv-field="industry" class="w-full border border-gray-300 rounded-md px-2 py-1 text-sm" />
+            </div>
+            <div class="co-field-group" style="grid-column: 1 / -1;">
+              <label>Advertiser Notes</label>
+              <textarea data-adv-field="notes" class="w-full border border-gray-300 rounded-md px-2 py-1 text-sm" rows="2" placeholder="Special instructions or notes about this advertiser...">${fields.notes || ''}</textarea>
+            </div>
+          </div>
         `;
       }
 
@@ -363,12 +490,50 @@
           camData = allCams.find(c => c.id === entity.id) || {};
         } catch {}
 
+        const fields = entity.fields || {};
+
         return `
-          <div class="flex gap-8 text-sm text-gray-600 mb-2">
+          <div class="flex gap-8 text-sm text-gray-600 mb-4">
             <span><strong>ID:</strong> ${entity.id}</span>
             <span><strong>DSP:</strong> ${camData.dsp || '—'}</span>
+            <span><strong>Status:</strong> ${camData.status || '—'}</span>
           </div>
-          <p class="text-sm text-gray-400 italic">No changes requested at the campaign level.</p>
+          <div class="co-fields-grid">
+            <div class="co-field-group">
+              <label>Campaign Name</label>
+              <input type="text" value="${fields.name || camData.name || ''}" placeholder="Campaign name" data-cam-id="${entity.id}" data-cam-field="name" class="w-full border border-gray-300 rounded-md px-2 py-1 text-sm" />
+            </div>
+            <div class="co-field-group">
+              <label>Flight Start Date</label>
+              <input type="date" value="${fields.startDate || ''}" data-cam-id="${entity.id}" data-cam-field="startDate" class="w-full border border-gray-300 rounded-md px-2 py-1 text-sm" />
+            </div>
+            <div class="co-field-group">
+              <label>Flight End Date</label>
+              <input type="date" value="${fields.endDate || ''}" data-cam-id="${entity.id}" data-cam-field="endDate" class="w-full border border-gray-300 rounded-md px-2 py-1 text-sm" />
+            </div>
+            <div class="co-field-group">
+              <label>Budget</label>
+              <input type="text" value="${fields.budget || ''}" placeholder="e.g. $10,000" data-cam-id="${entity.id}" data-cam-field="budget" class="w-full border border-gray-300 rounded-md px-2 py-1 text-sm" />
+            </div>
+            <div class="co-field-group">
+              <label>Pacing</label>
+              <select data-cam-id="${entity.id}" data-cam-field="pacing" class="w-full border border-gray-300 rounded-md px-2 py-1 text-sm">
+                <option value="" ${!fields.pacing ? 'selected' : ''}>Select pacing...</option>
+                <option value="even" ${fields.pacing === 'even' ? 'selected' : ''}>Even</option>
+                <option value="asap" ${fields.pacing === 'asap' ? 'selected' : ''}>ASAP</option>
+                <option value="frontloaded" ${fields.pacing === 'frontloaded' ? 'selected' : ''}>Frontloaded</option>
+                <option value="backloaded" ${fields.pacing === 'backloaded' ? 'selected' : ''}>Backloaded</option>
+              </select>
+            </div>
+            <div class="co-field-group">
+              <label>Frequency Cap</label>
+              <input type="text" value="${fields.frequencyCap || ''}" placeholder="e.g. 3 per day" data-cam-id="${entity.id}" data-cam-field="frequencyCap" class="w-full border border-gray-300 rounded-md px-2 py-1 text-sm" />
+            </div>
+            <div class="co-field-group" style="grid-column: 1 / -1;">
+              <label>Campaign Notes / Instructions</label>
+              <textarea data-cam-id="${entity.id}" data-cam-field="notes" class="w-full border border-gray-300 rounded-md px-2 py-1 text-sm" rows="2" placeholder="Targeting instructions, creative notes, special requests...">${fields.notes || ''}</textarea>
+            </div>
+          </div>
         `;
       }
 
@@ -508,10 +673,23 @@
           `;
         }).join('');
       } else {
-        // Load ad groups from localStorage  
+        // Load ad groups from localStorage - but only those belonging to this advertiser's campaigns
         let adgroups = [];
         try {
-          adgroups = JSON.parse(localStorage.getItem('adgroups_data_v1') || '[]');
+          // First, get all campaign IDs for this advertiser
+          const advertiserCampaignIds = new Set();
+          const tree = JSON.parse(localStorage.getItem('campaign_tree_groups') || '{}');
+          if (tree.campaigns) tree.campaigns.forEach(c => advertiserCampaignIds.add(c.id));
+          if (tree.groups) tree.groups.forEach(g => { 
+            if (g.campaigns) g.campaigns.forEach(c => advertiserCampaignIds.add(c.id)); 
+          });
+          
+          // Then filter ad groups to only those belonging to this advertiser's campaigns
+          const allAdgroups = JSON.parse(localStorage.getItem('adgroups_data_v1') || '[]');
+          adgroups = allAdgroups.filter(ag => {
+            const agCampaignId = ag.campaign || ag.campaignId;
+            return agCampaignId && advertiserCampaignIds.has(agCampaignId);
+          });
         } catch {}
 
         if (adgroups.length === 0) {
@@ -521,12 +699,13 @@
 
         container.innerHTML = adgroups.map(ag => {
           const isSelected = entitySelections.adgroups.has(ag.id);
+          const campaignName = ag.campaign || ag.campaignId || '';
           return `
             <div class="flex items-center gap-3 p-3 border border-gray-200 rounded-md mb-2 hover:bg-gray-50 cursor-pointer ${isSelected ? 'bg-amber-50 border-amber-300' : ''}" onclick="toggleEntitySelection('adgroups', '${ag.id}')">
               <input type="checkbox" ${isSelected ? 'checked' : ''} class="w-4 h-4 text-amber-600 pointer-events-none" />
               <div class="flex-1">
                 <div class="font-medium text-gray-800">${ag.name || ag.id}</div>
-                <div class="text-xs text-gray-500">ID: ${ag.id} ${ag.classification ? '• ' + ag.classification : ''}</div>
+                <div class="text-xs text-gray-500">ID: ${ag.id} ${campaignName ? '• Campaign: ' + campaignName : ''} ${ag.classification ? '• ' + ag.classification : ''}</div>
               </div>
               <span class="text-xs px-2 py-0.5 rounded bg-amber-100 text-amber-700">Ad Group</span>
             </div>
@@ -562,8 +741,18 @@
         all.forEach(ag => adgroupMap[ag.id] = ag);
       } catch {}
 
-      // Keep the advertiser entity if it exists
-      const advEntity = co.entities ? co.entities.find(e => e.type === 'advertiser') : null;
+      // Keep the advertiser entity if it exists, or create one
+      let advEntity = co.entities ? co.entities.find(e => e.type === 'advertiser') : null;
+      
+      // If no advertiser entity exists, create one from adv data
+      if (!advEntity && adv) {
+        advEntity = {
+          type: 'advertiser',
+          id: adv.id || adv.advertiserId || 'unknown',
+          name: adv.name || 'Unknown Advertiser',
+          fields: {}
+        };
+      }
       
       // Build new entities array
       const newEntities = [];
