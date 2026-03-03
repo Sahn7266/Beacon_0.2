@@ -234,12 +234,16 @@ function populateCOPickerList() {
  * Now opens the Entity Select modal (Step 2) before redirecting
  */
 function createNewChangeOrder() {
+  console.log('createNewChangeOrder called');
+  
   // Get advertiser info from localStorage
   let advData = null;
   try {
     const raw = localStorage.getItem('adv_selected_data');
     if (raw) advData = JSON.parse(raw);
   } catch {}
+
+  console.log('Advertiser data:', advData);
 
   // Create advertiser entity
   const advertiserEntity = advData ? {
@@ -260,12 +264,17 @@ function createNewChangeOrder() {
     advertiserId: getSelectedAdvertiserId()
   };
   
+  console.log('Created new CO:', newCO);
+  
   // Store the new CO temporarily for the entity selection step
   window._pendingNewCO = newCO;
+  
+  console.log('Stored in window._pendingNewCO:', window._pendingNewCO);
   
   closeCOPickerModal();
   
   // Open the Entity Tree Selector (Step 2) instead of navigating directly
+  console.log('Opening entity select modal...');
   openEntitySelectModal();
 }
 
@@ -416,7 +425,9 @@ function openEntitySelectModal() {
   ensureEntitySelectModal();
   const container = document.getElementById('entityTreeContainer');
   container.innerHTML = buildEntityTreeHTML();
-  document.getElementById('entitySelectModal').classList.remove('hidden');
+  const modal = document.getElementById('entitySelectModal');
+  modal.classList.remove('hidden');
+  modal.classList.add('flex');
 
   // Wire up campaign checkbox toggles
   document.querySelectorAll('.entity-tree-cam-check').forEach(cb => {
@@ -436,7 +447,10 @@ function openEntitySelectModal() {
  */
 function closeEntitySelectModal() {
   const modal = document.getElementById('entitySelectModal');
-  if (modal) modal.classList.add('hidden');
+  if (modal) {
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+  }
   
   // Clear the pending CO if user cancels
   window._pendingNewCO = null;
@@ -446,6 +460,9 @@ function closeEntitySelectModal() {
  * Collect selected entities from the tree and proceed with CO creation
  */
 function confirmEntityTreeSelection() {
+  console.log('confirmEntityTreeSelection called');
+  console.log('window._pendingNewCO:', window._pendingNewCO);
+  
   const selectedCampaigns = [];
   const selectedAdGroups = [];
 
@@ -460,14 +477,18 @@ function confirmEntityTreeSelection() {
     });
   });
 
+  console.log('Selected campaigns:', selectedCampaigns);
+  console.log('Selected ad groups:', selectedAdGroups);
+
   // Store selections in localStorage for ChangeOrderDetail.html to pick up
   localStorage.setItem('co_selected_entities', JSON.stringify({
     campaigns: selectedCampaigns,
     adgroups: selectedAdGroups
   }));
 
-  closeEntitySelectModal();
-
+  // Don't close the modal here - we'll close it after saving
+  // or let the redirect take care of it
+  
   // Now proceed with the CO creation and redirect
   proceedWithCOCreation();
 }
@@ -476,10 +497,14 @@ function confirmEntityTreeSelection() {
  * Complete the CO creation process and redirect to ChangeOrderDetail
  */
 function proceedWithCOCreation() {
+  console.log('proceedWithCOCreation called');
   const newCO = window._pendingNewCO;
   
+  console.log('newCO:', newCO);
+  
   if (!newCO) {
-    console.warn('No pending CO found');
+    console.error('No pending CO found - this is the problem!');
+    alert('Error: No pending Change Order found. Please try again.');
     return;
   }
   
@@ -488,7 +513,11 @@ function proceedWithCOCreation() {
   try {
     const raw = localStorage.getItem('co_selected_entities');
     if (raw) selectedEntities = JSON.parse(raw);
-  } catch (e) {}
+  } catch (e) {
+    console.error('Error parsing selected entities:', e);
+  }
+  
+  console.log('Selected entities:', selectedEntities);
   
   // Get campaign and ad group data for names
   let campaignMap = {};
@@ -500,12 +529,16 @@ function proceedWithCOCreation() {
     if (tree.campaigns) allCams = allCams.concat(tree.campaigns);
     if (tree.groups) tree.groups.forEach(g => { if (g.campaigns) allCams = allCams.concat(g.campaigns); });
     allCams.forEach(c => campaignMap[c.id] = c);
-  } catch (e) {}
+  } catch (e) {
+    console.error('Error loading campaigns:', e);
+  }
   
   try {
     const all = JSON.parse(localStorage.getItem('adgroups_data_v1') || '[]');
     all.forEach(ag => adgroupMap[ag.id] = ag);
-  } catch (e) {}
+  } catch (e) {
+    console.error('Error loading ad groups:', e);
+  }
   
   // Add selected campaigns as entities
   selectedEntities.campaigns.forEach(camId => {
@@ -529,6 +562,8 @@ function proceedWithCOCreation() {
     });
   });
   
+  console.log('Final CO with entities:', newCO);
+  
   // Save the CO with all entities
   saveChangeOrder(newCO);
   
@@ -542,6 +577,8 @@ function proceedWithCOCreation() {
   } else if (window.toast && typeof window.toast.success === 'function') {
     window.toast.success('Change order created');
   }
+  
+  console.log('Redirecting to:', `./ChangeOrderDetail.html?coId=${encodeURIComponent(newCO.id)}`);
   
   // Navigate to the new change order
   window.location.href = `./ChangeOrderDetail.html?coId=${encodeURIComponent(newCO.id)}`;
