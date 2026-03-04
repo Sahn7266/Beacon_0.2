@@ -238,18 +238,22 @@
             <div class="overflow-x-auto border border-default rounded-md mx-2">
               <table id="coTable" class="min-w-full table-fixed rounded-md overflow-hidden tbl tbl-row-hover tbl-row-alt">
                 <colgroup>
-                  <col style="width: 11%;">
-                  <col style="width: 20%;">
-                  <col style="width: 9%;">
-                  <col style="width: 12%;">
-                  <col style="width: 12%;">
-                  <col style="width: 12%;">
-                  <col style="width: 7%;">
-                  <col style="width: 7%;">
-                  <col style="width: 10%;">
+                  <col style="width: 4%;">   <!-- Checkbox -->
+                  <col style="width: 10%;">  <!-- ID (was 11%) -->
+                  <col style="width: 19%;">  <!-- Name (was 20%) -->
+                  <col style="width: 8%;">   <!-- Status (was 9%) -->
+                  <col style="width: 11%;">  <!-- Modified (was 12%) -->
+                  <col style="width: 11%;">  <!-- Created (was 12%) -->
+                  <col style="width: 11%;">  <!-- Owner (was 12%) -->
+                  <col style="width: 7%;">   <!-- Campaigns -->
+                  <col style="width: 7%;">   <!-- Ad Groups -->
+                  <col style="width: 12%;">  <!-- Actions (was 10%) -->
                 </colgroup>
                 <thead class="tbl-head">
                   <tr>
+                    <th class="w-10 px-3 py-2 text-center border-r border-gray-200">
+                      <input type="checkbox" id="selectAllCheckbox" class="w-4 h-4 accent-blue-600 cursor-pointer" title="Select All">
+                    </th>
                     <th scope="col" class="text-sm font-medium text-gray-700 uppercase tracking-wider border-r border-gray-200">
                       <button type="button" class="sort-btn flex w-full items-center px-4 py-2 space-x-2" data-sort-key="id">
                         <span>ID</span>
@@ -382,7 +386,7 @@
       const hiddenCount = allCOs.length - filtered.length;
 
       if (filtered.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="9" class="px-6 py-8 text-center text-gray-500">No change orders found</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="10" class="px-6 py-8 text-center text-gray-500">No change orders found</td></tr>';
         if (countEl) countEl.textContent = allCOs.length === 0 ? '' : `0 showing (${hiddenCount} hidden by filter)`;
         return;
       }
@@ -396,6 +400,9 @@
         const tr = document.createElement('tr');
         tr.className = 'hover:bg-gray-50';
         tr.innerHTML = `
+          <td class="px-3 py-1 text-center">
+            <input type="checkbox" class="w-4 h-4 accent-blue-600 cursor-pointer row-select-checkbox" data-co-id="${co.id}">
+          </td>
           <td class="px-4 py-1 whitespace-nowrap text-sm border-r border-default">
             <a href="./ChangeOrderDetail.html?coId=${encodeURIComponent(co.id)}" class="text-blue-600 hover:underline">${co.id}</a>
           </td>
@@ -418,6 +425,13 @@
       if (countEl) {
         countEl.textContent = `${filtered.length} change order${filtered.length !== 1 ? 's' : ''} showing` +
           (hiddenCount > 0 ? ` (${hiddenCount} hidden)` : '');
+      }
+
+      // Reset select all checkbox after re-render
+      const selectAllCb = document.getElementById('selectAllCheckbox');
+      if (selectAllCb) {
+        selectAllCb.checked = false;
+        selectAllCb.indeterminate = false;
       }
     }
 
@@ -462,6 +476,45 @@
       document.addEventListener('click', (e) => {
         if (!menuBtn.contains(e.target) && !menuDrop.contains(e.target)) menuDrop.classList.add('hidden');
       });
+    }
+
+    // Checkbox selection logic
+    const tbody = document.getElementById('coTableBody');
+    const selectAllCb = document.getElementById('selectAllCheckbox');
+
+    // Handle individual row checkbox changes
+    if (tbody) {
+      tbody.addEventListener('change', function(e) {
+        if (e.target.classList.contains('row-select-checkbox')) {
+          updateSelectAllState();
+        }
+      });
+    }
+
+    // Handle select all checkbox
+    if (selectAllCb) {
+      selectAllCb.addEventListener('change', function() {
+        const checked = this.checked;
+        const rowCheckboxes = tbody.querySelectorAll('.row-select-checkbox');
+        rowCheckboxes.forEach(cb => cb.checked = checked);
+      });
+    }
+
+    function updateSelectAllState() {
+      const rowCheckboxes = tbody.querySelectorAll('.row-select-checkbox');
+      const totalRows = rowCheckboxes.length;
+      const checkedRows = tbody.querySelectorAll('.row-select-checkbox:checked').length;
+
+      if (checkedRows === 0) {
+        selectAllCb.checked = false;
+        selectAllCb.indeterminate = false;
+      } else if (checkedRows === totalRows) {
+        selectAllCb.checked = true;
+        selectAllCb.indeterminate = false;
+      } else {
+        selectAllCb.checked = false;
+        selectAllCb.indeterminate = true;
+      }
     }
   });
   </script>

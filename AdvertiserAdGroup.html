@@ -358,12 +358,12 @@
               <!-- Right Column: IDs -->
               <div class="text-right">
                 <div class="flex justify-end gap-2">
-                  <span class="text-sm font-semibold text-gray-600">Delivery ID:</span>
-                  <a href="https://www.thetradedesk.com/" target="_blank" class="text-sm text-blue-600 hover:text-blue-800 hover:underline w-28 text-left" data-bind="adv.deliveryId">—</a>
+                  <!-- <span class="text-sm font-semibold text-gray-600">Delivery ID:</span>
+                  <a href="https://www.thetradedesk.com/" target="_blank" class="text-sm text-blue-600 hover:text-blue-800 hover:underline w-28 text-left" data-bind="adv.deliveryId">—</a> -->
                 </div>
                 <div class="flex justify-end gap-2">
-                  <span class="text-sm font-semibold text-gray-600">Reporting ID:</span>
-                  <a href="https://campaignmanager.google.com/" target="_blank" class="text-sm text-blue-600 hover:text-blue-800 hover:underline w-28 text-left" data-bind="adv.reportingId">—</a>
+                  <!-- <span class="text-sm font-semibold text-gray-600">Reporting ID:</span>
+                  <a href="https://campaignmanager.google.com/" target="_blank" class="text-sm text-blue-600 hover:text-blue-800 hover:underline w-28 text-left" data-bind="adv.reportingId">—</a> -->
                 </div>
                 <div class="flex justify-end gap-2">
                   <span class="text-sm font-semibold text-gray-600">ID:</span>
@@ -496,6 +496,9 @@
               <table id="campaignTable" class="min-w-full table-fixed rounded-md overflow-hidden tbl tbl-row-hover tbl-row-alt">
                 <thead class="tbl-head">
                   <tr>
+                    <th scope="col" class="w-10 px-3 py-2 text-center border-r border-gray-200">
+                      <input type="checkbox" id="selectAllCheckbox" class="w-4 h-4 accent-blue-600 cursor-pointer" title="Select All">
+                    </th>
                     <th scope="col" class="text-sm font-medium text-gray-700 uppercase tracking-wider border-r border-gray-200">
                       <button type="button" class="sort-btn flex w-full items-center px-6 py-2 space-x-2" data-sort-key="id">
                         <span>ID</span>
@@ -1649,7 +1652,7 @@
 
           if (data.length === 0) {
             const tr = document.createElement('tr');
-            tr.innerHTML = '<td colspan="5" class="px-6 py-4 text-center text-gray-500">No ad groups found</td>';
+            tr.innerHTML = '<td colspan="8" class="px-6 py-4 text-center text-gray-500">No ad groups found</td>';
             tbody.appendChild(tr);
             return;
           }
@@ -1658,6 +1661,9 @@
             const tr = document.createElement('tr');
             tr.className = 'hover:bg-gray-50';
             tr.innerHTML = `
+              <td class="px-3 py-1 text-center border-r border-gray-200">
+                <input type="checkbox" class="w-4 h-4 accent-blue-600 cursor-pointer row-select-checkbox" data-adgroup-id="${ag.id}">
+              </td>
               <td class="px-6 py-1 whitespace-nowrap text-sm text-gray-900 border-r border-gray-200">${ag.id || ''}</td>
 <td class="px-6 py-1 whitespace-nowrap text-sm font-medium text-gray-900 border-r border-gray-200">
   <a href="./AdGroupDetails.html?id=${encodeURIComponent(ag.id)}&campaignId=${encodeURIComponent(ag.campaign || '')}" class="text-blue-600 hover:underline">
@@ -1714,6 +1720,43 @@
       };
 
       app.init();
+    });
+  </script>
+
+  <!-- Checkbox Selection Logic -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const tableBody = document.getElementById('campaignTableBody');
+      const selectAllCheckbox = document.getElementById('selectAllCheckbox');
+
+      function updateSelectAllState() {
+        const rowCheckboxes = tableBody.querySelectorAll('.row-select-checkbox');
+        const checkedCount = tableBody.querySelectorAll('.row-select-checkbox:checked').length;
+        
+        if (checkedCount === 0) {
+          selectAllCheckbox.checked = false;
+          selectAllCheckbox.indeterminate = false;
+        } else if (checkedCount === rowCheckboxes.length) {
+          selectAllCheckbox.checked = true;
+          selectAllCheckbox.indeterminate = false;
+        } else {
+          selectAllCheckbox.checked = false;
+          selectAllCheckbox.indeterminate = true;
+        }
+      }
+
+      if (selectAllCheckbox) {
+        selectAllCheckbox.addEventListener('change', function() {
+          const rowCheckboxes = tableBody.querySelectorAll('.row-select-checkbox');
+          rowCheckboxes.forEach(cb => cb.checked = this.checked);
+        });
+      }
+
+      tableBody.addEventListener('change', function(e) {
+        if (e.target.classList.contains('row-select-checkbox')) {
+          updateSelectAllState();
+        }
+      });
     });
   </script>
 
