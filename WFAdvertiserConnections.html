@@ -498,17 +498,6 @@
             </div>
 
           </nav>
-
-          <!-- Progress Indicator -->
-          <div class="mt-8 pt-6 border-t border-gray-200">
-            <div class="flex items-center justify-between text-xs text-gray-600 mb-2">
-              <span>Progress</span>
-              <span>100%</span>
-            </div>
-            <div class="w-full bg-gray-200 rounded-full h-2">
-              <div class="bg-blue-600 h-2 rounded-full transition-all duration-300" style="width: 100%"></div>
-            </div>
-          </div>
         </div>
 
         <!-- Right Content Area -->
@@ -525,145 +514,29 @@
           </div>
 
           <div class="space-y-4">
-            
-            <!-- Toggle All Connectors -->
-            <div class="flex items-center justify-between p-4 bg-blue-50 border border-blue-200 rounded-lg">
-              <div>
-                <p class="text-sm font-medium text-gray-900">Enable Platform Connectors</p>
-                <p class="text-xs text-gray-600 mt-1">Toggle to mark selected platforms as Connected</p>
-              </div>
-              <button type="button" id="editConnectorsToggle" class="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent bg-gray-200 transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2" role="switch" aria-checked="false">
-                <span aria-hidden="true" class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out translate-x-0"></span>
-              </button>
+            <!-- DSP Section Header -->
+            <div class="pt-2">
+              <h4 class="text-sm font-semibold text-gray-900 mb-3 flex items-center">
+                <svg class="w-5 h-5 mr-2 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z"></path>
+                </svg>
+                <span id="editConnectorSectionLabel">DSP (Demand-Side Platform)</span>
+              </h4>
             </div>
 
-            <!-- Connectors Content -->
-            <div id="editConnectorsContent" class="space-y-4">
-              
-              <!-- DSP Section Header -->
-              <div id="editDspSection" class="pt-2">
-                <h4 class="text-sm font-semibold text-gray-900 mb-3 flex items-center">
-                  <svg class="w-5 h-5 mr-2 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z"></path>
-                  </svg>
-                  DSP (Demand-Side Platform)
-                </h4>
-              </div>
+            <!-- Read-only platform field -->
+            <div class="border border-gray-300 rounded-md px-4 py-2.5 bg-gray-50">
+              <span id="editConnectorPlatformName" class="text-sm text-gray-900">The Trade Desk</span>
+            </div>
 
-              <!-- The Trade Desk -->
-              <div class="connector-card border-2 rounded-lg p-4 cursor-pointer transition-all hover:border-blue-300 hover:shadow-md" data-connector="trade-desk">
-                <div class="flex items-center justify-between">
-                  <div class="flex items-center space-x-3">
-                    <input 
-                      type="checkbox" 
-                      id="edit-dsp-trade-desk" 
-                      name="edit-dsp" 
-                      value="trade-desk"
-                      class="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                    />
-                    <div>
-                      <p class="text-sm font-semibold text-gray-900">The Trade Desk</p>
-                      <p class="text-xs text-gray-500">Programmatic advertising platform</p>
-                    </div>
-                  </div>
-                  <div class="flex items-center space-x-3">
-                    <!-- <span class="connector-status-label text-xs font-medium text-gray-600">Not Connected</span> -->
-                    <span class="px-2 py-1 text-xs font-bold rounded bg-blue-100 text-blue-700">API</span>
-                    <!-- <button type="button" class="edit-connector-toggle relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent bg-gray-200 transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2" role="switch" aria-checked="false" data-connector="trade-desk">
-                      <span aria-hidden="true" class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out translate-x-0"></span>
-                    </button> -->
-                  </div>
-                </div>
-              </div>
-
-              <!-- DV360 -->
-              <div class="connector-card border-2 rounded-lg p-4 cursor-pointer transition-all hover:border-blue-300 hover:shadow-md" data-connector="dv360">
-                <div class="flex items-center justify-between">
-                  <div class="flex items-center space-x-3">
-                    <input 
-                      type="checkbox" 
-                      id="edit-dsp-dv360" 
-                      name="edit-dsp" 
-                      value="dv360"
-                      class="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                    />
-                    <div>
-                      <p class="text-sm font-semibold text-gray-900">DV360</p>
-                      <p class="text-xs text-gray-500">Google Display & Video 360</p>
-                    </div>
-                  </div>
-                  <div class="flex items-center space-x-3">
-                    <!-- <span class="connector-status-label text-xs font-medium text-gray-600">Not Connected</span> -->
-                    <span class="px-2 py-1 text-xs font-bold rounded bg-yellow-100 text-yellow-700">PDF</span>
-                    <!-- <button type="button" class="edit-connector-toggle relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent bg-gray-200 transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2" role="switch" aria-checked="false" data-connector="dv360">
-                      <span aria-hidden="true" class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out translate-x-0"></span>
-                    </button> -->
-                  </div>
-                </div>
-              </div>
-
-              <!-- Simplifi -->
-              <div class="connector-card border-2 rounded-lg p-4 cursor-pointer transition-all hover:border-blue-300 hover:shadow-md" data-connector="simplifi">
-                <div class="flex items-center justify-between">
-                  <div class="flex items-center space-x-3">
-                    <input 
-                      type="checkbox" 
-                      id="edit-dsp-simplifi" 
-                      name="edit-dsp" 
-                      value="simplifi"
-                      class="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                    />
-                    <div>
-                      <p class="text-sm font-semibold text-gray-900">Simplifi</p>
-                      <p class="text-xs text-gray-500">Local advertising platform</p>
-                    </div>
-                  </div>
-                  <div class="flex items-center space-x-3">
-                    <!-- <span class="connector-status-label text-xs font-medium text-gray-600">Not Connected</span> -->
-                    <span class="px-2 py-1 text-xs font-bold rounded bg-yellow-100 text-yellow-700">PDF</span>
-                    <!-- <button type="button" class="edit-connector-toggle relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent bg-gray-200 transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2" role="switch" aria-checked="false" data-connector="simplifi">
-                      <span aria-hidden="true" class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out translate-x-0"></span>
-                    </button> -->
-                  </div>
-                </div>
-              </div>
-
-              <!-- Ad Server Section Header -->
-              <div id="editAdServerSection" class="pt-4">
-                <h4 class="text-sm font-semibold text-gray-900 mb-3 flex items-center">
-                  <svg class="w-5 h-5 mr-2 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M2 5a2 2 0 012-2h12a2 2 0 012 2v10a2 2 0 01-2 2H4a2 2 0 01-2-2V5zm3.293 1.293a1 1 0 011.414 0l3 3a1 1 0 010 1.414l-3 3a1 1 0 01-1.414-1.414L7.586 10 5.293 7.707a1 1 0 010-1.414zM11 12a1 1 0 100 2h3a1 1 0 100-2h-3z" clip-rule="evenodd"></path>
-                  </svg>
-                  Ad Server
-                </h4>
-              </div>
-
-              <!-- Google Campaign Manager -->
-              <div class="connector-card border-2 rounded-lg p-4 cursor-pointer transition-all hover:border-blue-300 hover:shadow-md" data-connector="google-campaign-manager">
-                <div class="flex items-center justify-between">
-                  <div class="flex items-center space-x-3">
-                    <input 
-                      type="checkbox" 
-                      id="edit-adserver-gcm" 
-                      name="edit-adserver" 
-                      value="google-campaign-manager"
-                      class="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                    />
-                    <div>
-                      <p class="text-sm font-semibold text-gray-900">Google Campaign Manager</p>
-                      <p class="text-xs text-gray-500">Ad serving and campaign management</p>
-                    </div>
-                  </div>
-                  <div class="flex items-center space-x-3">
-                    <!-- <span class="connector-status-label text-xs font-medium text-gray-600">Not Connected</span> -->
-                    <span class="px-2 py-1 text-xs font-bold rounded bg-blue-100 text-blue-700">API</span>
-                    <!-- <button type="button" class="edit-connector-toggle relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent bg-gray-200 transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2" role="switch" aria-checked="false" data-connector="google-campaign-manager">
-                      <span aria-hidden="true" class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out translate-x-0"></span>
-                    </button> -->
-                  </div>
-                </div>
-              </div>
-
+            <!-- Sync to platform on creation checkbox -->
+            <div class="flex items-center mt-3">
+              <input 
+                type="checkbox" 
+                id="editSyncOnCreation" 
+                class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+              />
+              <label for="editSyncOnCreation" class="ml-2 text-sm text-gray-700">Sync to platform</label>
             </div>
           </div>
         </div>
@@ -1222,11 +1095,12 @@
               e.preventDefault();
               const action = anchor.dataset.action;
               if (action === 'create-connection') {
-                // Get the platform type from the data attribute
+                // Get the platform type and name from the data attributes
                 const platformType = anchor.dataset.platformType || null;
+                const platformName = anchor.dataset.platform || '';
                 // Open the Edit Connections modal to allow creating/enabling the connection
                 if (typeof openEditConnectionsModal === 'function') {
-                  openEditConnectionsModal(platformType);
+                  openEditConnectionsModal(platformType, platformName);
                 }
               }
               return;
@@ -1484,90 +1358,40 @@
     // ==================== EDIT CONNECTIONS MODAL ====================
 
     // Open Edit Connections Modal
-    // platformTypeFilter: 'DSP', 'Ad Server', or null (show all)
-    function openEditConnectionsModal(platformTypeFilter) {
+    function openEditConnectionsModal(platformTypeFilter, platformName) {
       const modal = document.getElementById('editConnectionsModal');
       if (!modal) return;
 
-      // Reset all checkboxes and toggles first
+      // Reset the modal
       resetEditConnectionsModal();
 
-      // Show/hide sections based on platform type filter
-      const dspSection = document.getElementById('editDspSection');
-      const adServerSection = document.getElementById('editAdServerSection');
-      
-      // Get all DSP connector cards
-      const dspCards = modal.querySelectorAll('.connector-card[data-connector="trade-desk"], .connector-card[data-connector="dv360"], .connector-card[data-connector="simplifi"]');
-      // Get all Ad Server connector cards
-      const adServerCards = modal.querySelectorAll('.connector-card[data-connector="google-campaign-manager"]');
-      
-      if (platformTypeFilter === 'DSP') {
-        // Show only DSP section
-        if (dspSection) dspSection.style.display = '';
-        dspCards.forEach(card => card.style.display = '');
-        if (adServerSection) adServerSection.style.display = 'none';
-        adServerCards.forEach(card => card.style.display = 'none');
-      } else if (platformTypeFilter === 'Ad Server') {
-        // Show only Ad Server section
-        if (dspSection) dspSection.style.display = 'none';
-        dspCards.forEach(card => card.style.display = 'none');
-        if (adServerSection) adServerSection.style.display = '';
-        adServerCards.forEach(card => card.style.display = '');
-      } else {
-        // Show all sections (no filter)
-        if (dspSection) dspSection.style.display = '';
-        dspCards.forEach(card => card.style.display = '');
-        if (adServerSection) adServerSection.style.display = '';
-        adServerCards.forEach(card => card.style.display = '');
+      // Populate the read-only platform name field
+      const platformNameEl = document.getElementById('editConnectorPlatformName');
+      if (platformNameEl) {
+        platformNameEl.textContent = platformName || 'Unknown Platform';
       }
 
-      // Read current connections from the table
-      const tableBody = document.getElementById('campaignTableBody');
-      if (tableBody) {
-        const rows = tableBody.querySelectorAll('tr');
-        
-        rows.forEach(row => {
-          const platformCell = row.querySelector('td:nth-child(1)');
-          const platformTypeCell = row.querySelector('td:nth-child(2)');
-          const platformName = platformCell ? platformCell.textContent.trim() : '';
-          const platformType = platformTypeCell ? platformTypeCell.textContent.trim() : '';
-          
-          // Map platform name to connector value
-          const platformMap = {
-            'The Trade Desk': 'trade-desk',
-            'DV360': 'dv360',
-            'Display & Video 360': 'dv360',
-            'Simplifi': 'simplifi',
-            'Google Campaign Manager': 'google-campaign-manager'
-          };
-          
-          const platformValue = platformMap[platformName];
-          if (!platformValue) return;
-          
-          // Check if this platform is in the table (enabled)
-          const checkbox = modal.querySelector(`input[value="${platformValue}"]`);
-          if (checkbox) {
-            checkbox.checked = true;
-            
-            // Update the card styling
-            const card = checkbox.closest('.connector-card');
-            if (card) {
-              card.classList.add('selected', 'border-blue-500', 'bg-blue-50');
-            }
-            
-            // Find if this row is connected (ENABLED status)
-            // Look for "Create" link - if present, it's disconnected
-            const createLink = row.querySelector('a[data-action="create-connection"]');
-            const isConnected = !createLink;
-            
-            // Find the toggle button for this connector
-            const toggle = modal.querySelector(`.edit-connector-toggle[data-connector="${platformValue}"]`);
-            if (toggle) {
-              updateToggleState(toggle, isConnected);
-            }
-          }
-        });
+      // Update the section label based on platform type
+      const sectionLabel = document.getElementById('editConnectorSectionLabel');
+      if (sectionLabel) {
+        if (platformTypeFilter === 'DSP') {
+          sectionLabel.textContent = 'DSP (Demand-Side Platform)';
+        } else if (platformTypeFilter === 'Ad Server') {
+          sectionLabel.textContent = 'Ad Server';
+        } else {
+          sectionLabel.textContent = 'Platform';
+        }
       }
+
+      // Ensure sync checkbox is unchecked
+      const syncCheckbox = document.getElementById('editSyncOnCreation');
+      if (syncCheckbox) {
+        syncCheckbox.checked = false;
+      }
+
+      // Store the platform context on the modal for use during save
+      modal.dataset.platformName = platformName || '';
+      modal.dataset.platformType = platformTypeFilter || '';
 
       // Show the modal
       modal.classList.remove('hidden');
@@ -1579,26 +1403,15 @@
       const modal = document.getElementById('editConnectionsModal');
       if (!modal) return;
 
-      // Reset all checkboxes
-      modal.querySelectorAll('input[type="checkbox"]').forEach(cb => {
-        cb.checked = false;
-      });
-
-      // Reset all connector cards
-      modal.querySelectorAll('.connector-card').forEach(card => {
-        card.classList.remove('selected', 'border-blue-500', 'bg-blue-50');
-      });
-
-      // Reset all toggles
-      modal.querySelectorAll('.edit-connector-toggle').forEach(toggle => {
-        updateToggleState(toggle, false);
-      });
-
-      // Reset master toggle
-      const masterToggle = document.getElementById('editConnectorsToggle');
-      if (masterToggle) {
-        updateToggleState(masterToggle, false);
+      // Reset sync checkbox
+      const syncCheckbox = document.getElementById('editSyncOnCreation');
+      if (syncCheckbox) {
+        syncCheckbox.checked = false;
       }
+
+      // Clear stored platform context
+      modal.dataset.platformName = '';
+      modal.dataset.platformType = '';
     }
 
     // Update toggle button state
@@ -1660,41 +1473,83 @@
           return;
         }
 
-        // Collect selected platforms and their status from the modal
-        const selectedDSP = [];
-        const selectedAdServer = [];
-        const connectionStatus = {};
+        const platformName = modal.dataset.platformName || '';
+        const platformType = modal.dataset.platformType || '';
+        const syncOnCreation = document.getElementById('editSyncOnCreation')?.checked || false;
 
-        modal.querySelectorAll('.connector-card').forEach(card => {
-          const checkbox = card.querySelector('input[type="checkbox"]');
-          const toggle = card.querySelector('.edit-connector-toggle');
-          
-          if (checkbox && checkbox.checked) {
-            const connectorType = checkbox.name; // 'edit-dsp' or 'edit-adserver'
-            const connectorValue = checkbox.value;
-            const isConnected = toggle && toggle.getAttribute('aria-checked') === 'true';
-            
-            if (connectorType === 'edit-dsp') {
-              selectedDSP.push(connectorValue);
-            } else if (connectorType === 'edit-adserver') {
-              selectedAdServer.push(connectorValue);
-            }
-            
-            connectionStatus[connectorValue] = isConnected ? 'Connected' : 'Disconnected';
-          }
-        });
-
-        // Update advertiser connectors
-        advertiser.connectors = {
-          dsp: selectedDSP,
-          adServer: selectedAdServer,
-          status: connectionStatus
+        // Map platform name to connector value
+        const platformMap = {
+          'The Trade Desk': 'trade-desk',
+          'DV360': 'dv360',
+          'Display & Video 360': 'dv360',
+          'Simplifi': 'simplifi',
+          'Google Campaign Manager': 'google-campaign-manager'
         };
+        const connectorValue = platformMap[platformName];
+
+        if (!connectorValue) {
+          if (window.toast && typeof window.toast.error === 'function') {
+            window.toast.error('Unknown platform');
+          }
+          return;
+        }
+
+        // Initialize connectors if not exists
+        if (!advertiser.connectors) {
+          advertiser.connectors = { dsp: [], adServer: [], status: {} };
+        }
+        if (!advertiser.connectors.dsp) advertiser.connectors.dsp = [];
+        if (!advertiser.connectors.adServer) advertiser.connectors.adServer = [];
+        if (!advertiser.connectors.status) advertiser.connectors.status = {};
+
+        // Add platform to the appropriate array if not already present
+        if (platformType === 'DSP') {
+          if (!advertiser.connectors.dsp.includes(connectorValue)) {
+            advertiser.connectors.dsp.push(connectorValue);
+          }
+        } else if (platformType === 'Ad Server') {
+          if (!advertiser.connectors.adServer.includes(connectorValue)) {
+            advertiser.connectors.adServer.push(connectorValue);
+          }
+        }
+
+        // If "Sync to platform on creation" is checked, mark as Connected
+        // and generate a Record ID
+        if (syncOnCreation) {
+          advertiser.connectors.status[connectorValue] = 'Connected';
+
+          // Generate a Record ID for this platform
+          // For DSPs, set a deliveryId; for Ad Servers, set a reportingId
+          const generatedId = 'REC-' + Date.now().toString(36).toUpperCase();
+          
+          if (platformType === 'DSP') {
+            if (!advertiser.deliveryId || advertiser.deliveryId === '—') {
+              advertiser.deliveryId = generatedId;
+            }
+          } else if (platformType === 'Ad Server') {
+            if (!advertiser.reportingId || advertiser.reportingId === '—') {
+              advertiser.reportingId = generatedId;
+            }
+          }
+
+          // Also store the Reporting ID from the modal input if provided
+          const reportingIdInput = document.getElementById('editReportingId');
+          if (reportingIdInput && reportingIdInput.value.trim()) {
+            if (platformType === 'Ad Server') {
+              advertiser.reportingId = reportingIdInput.value.trim();
+            } else if (platformType === 'DSP') {
+              advertiser.deliveryId = reportingIdInput.value.trim();
+            }
+          }
+        } else {
+          // Not synced — mark as Disconnected (platform is selected but not synced)
+          advertiser.connectors.status[connectorValue] = 'Disconnected';
+        }
 
         // Save back to localStorage
         localStorage.setItem('adv_selected_data', JSON.stringify(advertiser));
 
-        // Rebuild the connections table from the updated connectors
+        // Rebuild the connections table
         if (app) {
           app.adgroups = app.buildPlatformsFromConnectors(advertiser);
           app.saveAdGroups();
@@ -1703,16 +1558,19 @@
 
         // Show success message
         if (window.toast && typeof window.toast.success === 'function') {
-          window.toast.success('Connections updated successfully');
+          const msg = syncOnCreation 
+            ? 'Connection created and synced to platform' 
+            : 'Connection saved';
+          window.toast.success(msg);
         }
 
         // Close the modal
         closeEditConnectionsModal();
 
       } catch (error) {
-        console.error('Error saving connections:', error);
+        console.error('Error saving connection:', error);
         if (window.toast && typeof window.toast.error === 'function') {
-          window.toast.error('Failed to save connections');
+          window.toast.error('Failed to save connection');
         }
       }
     }
@@ -1746,73 +1604,6 @@
           closeEditConnectionsModal();
         }
       });
-
-      // Connector card click handling (toggle checkbox)
-      modal.querySelectorAll('.connector-card').forEach(card => {
-        card.addEventListener('click', (e) => {
-          // Don't toggle if clicking on the checkbox, toggle button, or their children
-          if (e.target.closest('input[type="checkbox"]') || e.target.closest('.edit-connector-toggle')) {
-            return;
-          }
-          
-          const checkbox = card.querySelector('input[type="checkbox"]');
-          if (checkbox) {
-            checkbox.checked = !checkbox.checked;
-            
-            // Update card styling
-            if (checkbox.checked) {
-              card.classList.add('selected', 'border-blue-500', 'bg-blue-50');
-            } else {
-              card.classList.remove('selected', 'border-blue-500', 'bg-blue-50');
-            }
-          }
-        });
-      });
-
-      // Checkbox change handler
-      modal.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
-        checkbox.addEventListener('change', (e) => {
-          const card = checkbox.closest('.connector-card');
-          if (card) {
-            if (checkbox.checked) {
-              card.classList.add('selected', 'border-blue-500', 'bg-blue-50');
-            } else {
-              card.classList.remove('selected', 'border-blue-500', 'bg-blue-50');
-            }
-          }
-        });
-      });
-
-      // Individual connector toggle handling
-      modal.querySelectorAll('.edit-connector-toggle').forEach(toggle => {
-        toggle.addEventListener('click', (e) => {
-          e.stopPropagation();
-          const isCurrentlyEnabled = toggle.getAttribute('aria-checked') === 'true';
-          updateToggleState(toggle, !isCurrentlyEnabled);
-        });
-      });
-
-      // Master toggle handling
-      const masterToggle = document.getElementById('editConnectorsToggle');
-      if (masterToggle) {
-        masterToggle.addEventListener('click', () => {
-          const isCurrentlyEnabled = masterToggle.getAttribute('aria-checked') === 'true';
-          const newState = !isCurrentlyEnabled;
-          
-          // Update master toggle
-          updateToggleState(masterToggle, newState);
-          
-          // Update all checked connector toggles
-          modal.querySelectorAll('.connector-card').forEach(card => {
-            const checkbox = card.querySelector('input[type="checkbox"]');
-            const toggle = card.querySelector('.edit-connector-toggle');
-            
-            if (checkbox && checkbox.checked && toggle) {
-              updateToggleState(toggle, newState);
-            }
-          });
-        });
-      }
     }
 
     // ==================== NEW CONNECTION MODAL ====================

@@ -959,7 +959,7 @@
                   <div class="mt-3">
                     <label class="inline-flex items-center cursor-pointer">
                       <input type="checkbox" id="adServerSyncCheckbox" class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500" />
-                      <span class="ml-2 text-sm text-gray-700">Sync to platform on creation</span>
+                      <span class="ml-2 text-sm text-gray-700">Sync to platform</span>
                     </label>
                   </div>
                 </div>
@@ -2635,24 +2635,25 @@ function updateWizardUI() {
 }
 
 function updatePlatformConfigVisibility() {
-  const dspCheckboxes = document.querySelectorAll('input[name="dsp"]:checked');
-  const adServerCheckboxes = document.querySelectorAll('input[name="adserver"]:checked');
+  // Use hidden input values from custom dropdowns (not checkboxes)
+  const dspDropdown = document.getElementById('dspDropdown');
+  const adServerDropdown = document.getElementById('adServerDropdown');
   
   const dspSection = document.getElementById('dspFieldsSection');
   const adServerSection = document.getElementById('adServerFieldsSection');
   const noMessage = document.getElementById('noPlatformsMessage');
   
-  const hasDSP = dspCheckboxes.length > 0;
-  const hasAdServer = adServerCheckboxes.length > 0;
+  const hasDSP = dspDropdown && dspDropdown.value !== '';
+  const hasAdServer = adServerDropdown && adServerDropdown.value !== '';
   
   if (hasDSP || hasAdServer) {
-    noMessage.classList.add('hidden');
-    dspSection.classList.toggle('hidden', !hasDSP);
-    adServerSection.classList.toggle('hidden', !hasAdServer);
+    if (noMessage) noMessage.classList.add('hidden');
+    if (dspSection) dspSection.classList.toggle('hidden', !hasDSP);
+    if (adServerSection) adServerSection.classList.toggle('hidden', !hasAdServer);
   } else {
-    noMessage.classList.remove('hidden');
-    dspSection.classList.add('hidden');
-    adServerSection.classList.add('hidden');
+    if (noMessage) noMessage.classList.remove('hidden');
+    if (dspSection) dspSection.classList.add('hidden');
+    if (adServerSection) adServerSection.classList.add('hidden');
   }
 }
 
@@ -2881,25 +2882,27 @@ document.addEventListener('click', (e) => {
 function updateFieldVisibility() {
   const dspDropdown = document.getElementById('dspDropdown');
   const adServerDropdown = document.getElementById('adServerDropdown');
+  const dspFields = document.getElementById('dspFieldsSection');
+  const adServerFields = document.getElementById('adServerFieldsSection');
   
   const dspSelected = dspDropdown && dspDropdown.value !== '';
   const adServerSelected = adServerDropdown && adServerDropdown.value !== '';
 
   // Show/hide DSP fields
-  if (dspFieldsSection) {
+  if (dspFields) {
     if (dspSelected) {
-      dspFieldsSection.classList.remove('hidden');
+      dspFields.classList.remove('hidden');
     } else {
-      dspFieldsSection.classList.add('hidden');
+      dspFields.classList.add('hidden');
     }
   }
 
   // Show/hide Ad Server fields
-  if (adServerFieldsSection) {
+  if (adServerFields) {
     if (adServerSelected) {
-      adServerFieldsSection.classList.remove('hidden');
+      adServerFields.classList.remove('hidden');
     } else {
-      adServerFieldsSection.classList.add('hidden');
+      adServerFields.classList.add('hidden');
     }
   }
 
@@ -3255,18 +3258,9 @@ function handleAdGroupCreation() {
     const dspSyncChecked = document.getElementById('dspSyncCheckbox')?.checked || false;
     const adServerSyncChecked = document.getElementById('adServerSyncCheckbox')?.checked || false;
     
-    // Map dropdown values to display names
-    const dspDisplayNames = {
-      'trade-desk': 'Trade Desk',
-      'dv360': 'DV360',
-      'simplifi': 'Simplifi'
-    };
-    const adServerDisplayNames = {
-      'google-campaign-manager': 'Google Campaign Manager'
-    };
-    
-    const selectedDsp = dspDropdownValue ? [dspDisplayNames[dspDropdownValue] || dspDropdownValue] : [];
-    const selectedAdServer = adServerDropdownValue ? [adServerDisplayNames[adServerDropdownValue] || adServerDropdownValue] : [];
+    // Store connector values directly (lowercase with hyphens) - NOT display names
+    const selectedDsp = dspDropdownValue ? [dspDropdownValue] : [];
+    const selectedAdServer = adServerDropdownValue ? [adServerDropdownValue] : [];
     
     // Helper function to get selected multi-select values
     function getMultiSelectValues(checkboxName) {

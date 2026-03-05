@@ -20,6 +20,20 @@
     .co-entity-body.collapsed { display: none; }
     .toggle-arrow { display: inline-block; width: 16px; transition: transform 0.15s; cursor: pointer; }
     .toggle-arrow.open { transform: rotate(90deg); }
+
+    /* Hierarchical entity depth */
+    .entity-depth-0 {
+      /* Advertiser - no indent */
+      margin-left: 0;
+    }
+    .entity-depth-1 {
+      /* Campaign - indent 20px */
+      margin-left: 20px;
+    }
+    .entity-depth-2 {
+      /* Ad Group - indent 40px */
+      margin-left: 70px;
+    }
   </style>
 </head>
 
@@ -420,32 +434,72 @@
 
       container.innerHTML = '';
 
-      // Group: advertiser first, then campaigns, then ad groups
-      const order = ['advertiser', 'campaign', 'adgroup'];
-      const sorted = [...co.entities].sort((a, b) => order.indexOf(a.type) - order.indexOf(b.type));
+      // Build hierarchical structure
+      const advertiser = co.entities.find(e => e.type === 'advertiser');
+      const campaigns = co.entities.filter(e => e.type === 'campaign');
+      const adgroups = co.entities.filter(e => e.type === 'adgroup');
 
-      sorted.forEach((entity, idx) => {
-        const secId = `sec-${entity.type}-${idx}`;
-        const isAdv = entity.type === 'advertiser';
-        const isAG  = entity.type === 'adgroup';
-
-        const section = document.createElement('div');
-        section.className = 'co-entity-section';
-        section.innerHTML = `
-          <div class="co-entity-header ${headerClass(entity.type)}" onclick="toggleSection('${secId}')">
-            <div class="entity-title">
-              <span class="toggle-arrow open" id="${secId}-arrow">▶</span>
-              ${entityPill(entity.type)}
-              ${entity.name || entity.id}
-            </div>
-            ${!isAdv ? `<span class="remove-btn" onclick="event.stopPropagation();removeEntity('${entity.type}','${entity.id}')">✕ Remove</span>` : ''}
-          </div>
-          <div class="co-entity-body" id="${secId}-body">
-            ${buildEntityBody(entity)}
-          </div>
-        `;
-        container.appendChild(section);
+      // Map ad groups to their parent campaigns
+      const adgroupsByCampaign = {};
+      adgroups.forEach(ag => {
+        const camId = ag.campaignId;
+        if (camId) {
+          if (!adgroupsByCampaign[camId]) adgroupsByCampaign[camId] = [];
+          adgroupsByCampaign[camId].push(ag);
+        }
       });
+
+      // Find orphaned ad groups (no parent or parent not in selection)
+      const campaignIds = new Set(campaigns.map(c => c.id));
+      const orphanedAdgroups = adgroups.filter(ag => !ag.campaignId || !campaignIds.has(ag.campaignId));
+
+      let renderIndex = 0;
+
+      // Render advertiser
+      if (advertiser) {
+        container.appendChild(renderEntitySection(advertiser, 0, renderIndex++));
+      }
+
+      // Render campaigns with nested ad groups
+      campaigns.forEach(campaign => {
+        container.appendChild(renderEntitySection(campaign, 1, renderIndex++));
+        const childAGs = adgroupsByCampaign[campaign.id] || [];
+        childAGs.forEach(ag => {
+          container.appendChild(renderEntitySection(ag, 2, renderIndex++, false));
+        });
+      });
+
+      // Render orphaned ad groups at end
+      if (orphanedAdgroups.length > 0) {
+        orphanedAdgroups.forEach(ag => {
+          container.appendChild(renderEntitySection(ag, 1, renderIndex++, true));
+        });
+      }
+    }
+
+    function renderEntitySection(entity, depth, idx, isOrphan = false) {
+      const secId = `sec-${entity.type}-${idx}`;
+      const isAdv = entity.type === 'advertiser';
+      const depthClass = `entity-depth-${depth}`;
+      const orphanWarning = isOrphan ? '<span class="text-xs text-orange-600 ml-2">(No parent campaign selected)</span>' : '';
+
+      const section = document.createElement('div');
+      section.className = `co-entity-section ${depthClass}`;
+      section.innerHTML = `
+        <div class="co-entity-header ${headerClass(entity.type)}" onclick="toggleSection('${secId}')">
+          <div class="entity-title">
+            <span class="toggle-arrow open" id="${secId}-arrow">▶</span>
+            ${entityPill(entity.type)}
+            ${entity.name || entity.id}
+            ${orphanWarning}
+          </div>
+          ${!isAdv ? `<span class="remove-btn" onclick="event.stopPropagation();removeEntity('${entity.type}','${entity.id}')">✕ Remove</span>` : ''}
+        </div>
+        <div class="co-entity-body" id="${secId}-body">
+          ${buildEntityBody(entity)}
+        </div>
+      `;
+      return section;
     }
 
     function buildEntityBody(entity) {
@@ -593,8 +647,23 @@
 
     // Remove entity from CO
     window.removeEntity = function(type, id) {
-      if (!confirm(`Remove this ${type} from the change order?`)) return;
-      co.entities = co.entities.filter(e => !(e.type === type && e.id === id));
+      if (type === 'campaign') {
+        // Count child ad groups that will be removed
+        const childAGs = co.entities.filter(e => e.type === 'adgroup' && e.campaignId === id);
+        const childCount = childAGs.length;
+        const msg = childCount > 0 
+          ? `Remove this campaign and its ${childCount} ad group${childCount > 1 ? 's' : ''} from the change order?`
+          : `Remove this campaign from the change order?`;
+        
+        if (!confirm(msg)) return;
+        
+        // Remove campaign and its children
+        co.entities = co.entities.filter(e => !(e.type === 'campaign' && e.id === id) && !(e.type === 'adgroup' && e.campaignId === id));
+      } else {
+        if (!confirm(`Remove this ${type} from the change order?`)) return;
+        co.entities = co.entities.filter(e => !(e.type === type && e.id === id));
+      }
+      
       co.modifiedDate = new Date().toISOString();
       saveChangeOrder(co);
       buildEntitySections(co);
@@ -766,6 +835,7 @@
           type: 'campaign',
           id: camId,
           name: cam ? cam.name : camId,
+          advertiserId: advEntity ? advEntity.id : null,
           fields: existing ? existing.fields : {}
         });
       });
@@ -773,12 +843,15 @@
       // Collect checked ad groups
       document.querySelectorAll('.manage-tree-ag-check:checked').forEach(cb => {
         const agId = cb.getAttribute('data-ag-id');
+        const camId = cb.getAttribute('data-cam-id');
         const ag = adgroupMap[agId];
         const existing = co.entities ? co.entities.find(e => e.type === 'adgroup' && e.id === agId) : null;
         newEntities.push({
           type: 'adgroup',
           id: agId,
           name: ag ? ag.name : agId,
+          campaignId: camId,
+          advertiserId: advEntity ? advEntity.id : null,
           fields: existing ? existing.fields : {}
         });
       });
