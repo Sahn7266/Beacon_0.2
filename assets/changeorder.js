@@ -301,16 +301,24 @@ function buildEntityTreeHTML() {
   }
 
   const advName = (adv && adv.name) ? adv.name : 'Unknown Advertiser';
+  const advId = adv ? adv.id : null;
 
-  // 2. Get all campaigns for this advertiser
+  // 2. Get all campaigns for this advertiser (filter by advertiserId)
   let campaigns = [];
   try {
     const tree = JSON.parse(localStorage.getItem('campaign_tree_groups') || '{}');
-    if (tree.campaigns) campaigns = campaigns.concat(tree.campaigns);
+    let allCampaigns = [];
+    if (tree.campaigns) allCampaigns = allCampaigns.concat(tree.campaigns);
     if (tree.groups) {
       tree.groups.forEach(g => {
-        if (g.campaigns) campaigns = campaigns.concat(g.campaigns);
+        if (g.campaigns) allCampaigns = allCampaigns.concat(g.campaigns);
       });
+    }
+    // Filter campaigns to only those belonging to the current advertiser
+    if (advId) {
+      campaigns = allCampaigns.filter(c => String(c.advertiserId) === String(advId));
+    } else {
+      campaigns = allCampaigns;
     }
   } catch (e) {}
 
@@ -558,6 +566,7 @@ function proceedWithCOCreation() {
       type: 'adgroup',
       id: agInfo.id,
       name: ag ? ag.name : agInfo.id,
+      campaignId: agInfo.campaignId,
       fields: {}
     });
   });
