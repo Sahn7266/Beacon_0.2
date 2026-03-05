@@ -248,7 +248,7 @@
       <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200">
         <h2 class="text-lg font-semibold text-gray-900">Manage Entities</h2>
         <button class="text-gray-400 hover:text-gray-600 transition-colors"
-          onclick="closeEntitySelectModal()" aria-label="Close">
+          onclick="closeManageEntitiesModal()" aria-label="Close">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
           </svg>
@@ -262,9 +262,9 @@
       </div>
       <div class="flex justify-end gap-2 px-6 py-3 bg-gray-50 border-t border-gray-200">
         <button class="px-4 py-2 text-sm text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
-          onclick="closeEntitySelectModal()">Cancel</button>
+          onclick="closeManageEntitiesModal()">Cancel</button>
         <button class="px-4 py-2 text-sm text-white bg-blue-600 border border-blue-600 rounded-md hover:bg-blue-700"
-          onclick="applyEntityTreeSelection()">Apply Changes</button>
+          onclick="applyManageEntitiesSelection()">Apply Changes</button>
       </div>
     </div>
   </div>
@@ -274,6 +274,28 @@
   document.addEventListener('DOMContentLoaded', () => {
     const urlParams = new URLSearchParams(window.location.search);
     const coId = urlParams.get('coId');
+
+    // ========== DEFINE GLOBAL FUNCTIONS FIRST (before any early returns) ==========
+    
+    // Toggle section visibility
+    window.toggleSection = function(secId) {
+      const body = document.getElementById(secId + '-body');
+      const arrow = document.getElementById(secId + '-arrow');
+      if (body) body.classList.toggle('collapsed');
+      if (arrow) arrow.classList.toggle('open');
+    };
+
+    // Close manage entities modal
+    window.closeManageEntitiesModal = function() {
+      document.getElementById('entitySelectModal').classList.add('hidden');
+    };
+
+    // Close modal on backdrop click
+    document.getElementById('entitySelectModal').addEventListener('click', (e) => {
+      if (e.target.id === 'entitySelectModal') closeManageEntitiesModal();
+    });
+
+    // ========== END GLOBAL FUNCTIONS ==========
 
     // Load advertiser info
     let adv = null;
@@ -378,15 +400,19 @@
       if (typeof showToast === 'function') showToast('Change order saved', 'success');
     });
 
-    document.getElementById('syncCOBtn').addEventListener('click', () => {
-      co.status = 'synced';
-      co.modifiedDate = new Date().toISOString();
-      saveChangeOrder(co);
-      const badge = document.getElementById('coStatusBadge');
-      badge.className = 'co-badge co-badge-synced';
-      badge.textContent = 'Synced';
-      if (typeof showToast === 'function') showToast('Change order synced', 'success');
-    });
+    // syncCOBtn is commented out in HTML, so skip adding listener
+    const syncBtn = document.getElementById('syncCOBtn');
+    if (syncBtn) {
+      syncBtn.addEventListener('click', () => {
+        co.status = 'synced';
+        co.modifiedDate = new Date().toISOString();
+        saveChangeOrder(co);
+        const badge = document.getElementById('coStatusBadge');
+        badge.className = 'co-badge co-badge-synced';
+        badge.textContent = 'Synced';
+        if (typeof showToast === 'function') showToast('Change order synced', 'success');
+      });
+    }
 
     document.getElementById('exportCOBtn').addEventListener('click', () => {
       const blob = new Blob([JSON.stringify(co, null, 2)], { type: 'application/json' });
@@ -399,7 +425,9 @@
     });
 
     document.getElementById('manageEntitiesBtn').addEventListener('click', () => {
-      openEntitySelectModal();
+      console.log('Manage Entities button clicked');
+      console.log('window.openManageEntitiesModal function:', typeof window.openManageEntitiesModal);
+      window.openManageEntitiesModal();
     });
 
     // --- Helper functions ---
@@ -637,14 +665,6 @@
       return '';
     }
 
-    // Toggle section visibility
-    window.toggleSection = function(secId) {
-      const body = document.getElementById(secId + '-body');
-      const arrow = document.getElementById(secId + '-arrow');
-      if (body) body.classList.toggle('collapsed');
-      if (arrow) arrow.classList.toggle('open');
-    };
-
     // Remove entity from CO
     window.removeEntity = function(type, id) {
       if (type === 'campaign') {
@@ -686,13 +706,21 @@
         } catch (e) {}
       }
       const advName = (advData && advData.name) ? advData.name : (adv && adv.name) ? adv.name : 'Unknown Advertiser';
+      const advId = advData ? advData.id : (adv ? adv.id : null);
 
-      // Get all available campaigns
+      // Get all available campaigns (filtered by advertiser)
       let campaigns = [];
       try {
         const tree = JSON.parse(localStorage.getItem('campaign_tree_groups') || '{}');
-        if (tree.campaigns) campaigns = campaigns.concat(tree.campaigns);
-        if (tree.groups) tree.groups.forEach(g => { if (g.campaigns) campaigns = campaigns.concat(g.campaigns); });
+        let allCampaigns = [];
+        if (tree.campaigns) allCampaigns = allCampaigns.concat(tree.campaigns);
+        if (tree.groups) tree.groups.forEach(g => { if (g.campaigns) allCampaigns = allCampaigns.concat(g.campaigns); });
+        // Filter campaigns by current advertiser
+        if (advId) {
+          campaigns = allCampaigns.filter(c => String(c.advertiserId) === String(advId));
+        } else {
+          campaigns = allCampaigns;
+        }
       } catch (e) {}
 
       // Get all ad groups mapped by campaign
@@ -772,10 +800,18 @@
       return html;
     }
 
-    window.openEntitySelectModal = function() {
+    window.openManageEntitiesModal = function() {
+      console.log('openManageEntitiesModal called');
       const container = document.getElementById('entityTreeContainer');
-      container.innerHTML = buildEntityTreeForManage();
-      document.getElementById('entitySelectModal').classList.remove('hidden');
+      console.log('entityTreeContainer:', container);
+      const treeHTML = buildEntityTreeForManage();
+      console.log('treeHTML length:', treeHTML ? treeHTML.length : 'null');
+      container.innerHTML = treeHTML;
+      const modal = document.getElementById('entitySelectModal');
+      console.log('entitySelectModal:', modal);
+      console.log('modal classes before:', modal.className);
+      modal.classList.remove('hidden');
+      console.log('modal classes after:', modal.className);
 
       // Wire up campaign checkbox toggles
       document.querySelectorAll('.manage-tree-cam-check').forEach(cb => {
@@ -790,11 +826,7 @@
       });
     };
 
-    window.closeEntitySelectModal = function() {
-      document.getElementById('entitySelectModal').classList.add('hidden');
-    };
-
-    window.applyEntityTreeSelection = function() {
+    window.applyManageEntitiesSelection = function() {
       // Get campaign data for name lookups
       let campaignMap = {};
       try {
@@ -861,15 +893,10 @@
       co.modifiedDate = new Date().toISOString();
       saveChangeOrder(co);
       buildEntitySections(co);
-      closeEntitySelectModal();
+      closeManageEntitiesModal();
 
       if (typeof showToast === 'function') showToast('Entities updated', 'success');
     };
-
-    // Close modal on backdrop click
-    document.getElementById('entitySelectModal').addEventListener('click', (e) => {
-      if (e.target.id === 'entitySelectModal') closeEntitySelectModal();
-    });
 
     // Waffle menu toggle
     const menuBtn = document.getElementById('menuButton');
