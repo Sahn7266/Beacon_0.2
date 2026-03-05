@@ -176,6 +176,58 @@
       opacity: 1;
       visibility: visible;
     }
+
+    /* Inline Record ID popover */
+    .inline-record-id-popover {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      z-index: 30;
+      margin-top: 2px;
+      background: rgba(120, 120, 120, 0.85);
+      border-radius: 6px;
+      padding: 6px 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+      white-space: nowrap;
+    }
+
+    .inline-record-id-popover input {
+      width: 180px;
+      padding: 4px 10px;
+      border: none;
+      border-radius: 4px;
+      font-size: 13px;
+      outline: none;
+      background: white;
+      color: #333;
+    }
+
+    .inline-record-id-popover input::placeholder {
+      color: #999;
+    }
+
+    .inline-record-id-popover .popover-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 2px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .inline-record-id-popover .popover-btn svg {
+      width: 20px;
+      height: 20px;
+      fill: #1a1a1a;
+    }
+
+    .inline-record-id-popover .popover-btn:hover svg {
+      fill: #000;
+    }
   </style>
 </head>
 
@@ -740,7 +792,7 @@
                 </div>
               </div>
 
-              <!-- Simplifi -->
+              <!-- Simpli.fi -->
               <div class="connector-card border-2 rounded-lg p-4 cursor-pointer transition-all hover:border-blue-300 hover:shadow-md" data-connector="simplifi">
                 <div class="flex items-center justify-between">
                   <div class="flex items-center space-x-3">
@@ -752,7 +804,7 @@
                       class="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                     />
                     <div>
-                      <p class="text-sm font-semibold text-gray-900">Simplifi</p>
+                      <p class="text-sm font-semibold text-gray-900">Simpli.fi</p>
                       <p class="text-xs text-gray-500">Local advertising platform</p>
                     </div>
                   </div>
@@ -1894,7 +1946,7 @@ function loadAdGroupConnections(adGroup) {
       logo: './assets/svgs/DV360.svg'
     },
     'simplifi': {
-      name: 'Simplifi',
+      name: 'Simpli.fi',
       type: 'DSP',
       logo: './assets/svgs/Simplifi.svg'
     },
@@ -1983,8 +2035,14 @@ function loadAdGroupConnections(adGroup) {
     
     // Determine Record ID value based on platform type and connection status
     let recordIdContent = '';
-    if (platform.status === 'Connected') {
-      // Connected - show appropriate ID based on platform type
+    
+    // Check for manually entered Record ID (DV360/Simpli.fi flow)
+    const manualId = adGroup.manualRecordIds ? adGroup.manualRecordIds[platform.name] : null;
+    
+    if (manualId) {
+      recordIdContent = `<a href="#" class="text-sm text-blue-600 hover:text-blue-800 hover:underline" data-action="edit-manual-record-id" data-platform="${platform.value}" data-platform-name="${platform.name}" data-platform-type="${platform.type}" data-current-value="${manualId}">${manualId}</a>`;
+    } else if (platform.status === 'Connected') {
+      // Connected via sync - show appropriate ID
       if (platform.type === 'DSP') {
         const deliveryId = adGroup.deliveryId || '—';
         recordIdContent = `<span class="text-sm text-gray-900">${deliveryId}</span>`;
@@ -1995,8 +2053,13 @@ function loadAdGroupConnections(adGroup) {
         recordIdContent = `<span class="text-sm text-gray-900">—</span>`;
       }
     } else {
-      // Disconnected - show "Create" hyperlink
-      recordIdContent = `<a href="#" class="text-sm text-blue-600 hover:text-blue-800 hover:underline" data-action="create-connection" data-platform="${platform.value}" data-platform-name="${platform.name}" data-platform-type="${platform.type}">Create</a>`;
+      // Disconnected — check if inline platform
+      const isInlinePlatform = (platform.name === 'DV360' || platform.name === 'Simpli.fi');
+      if (isInlinePlatform) {
+        recordIdContent = `<a href="#" class="text-sm text-blue-600 hover:text-blue-800 hover:underline" data-action="inline-record-id" data-platform="${platform.value}" data-platform-name="${platform.name}" data-platform-type="${platform.type}">Create</a>`;
+      } else {
+        recordIdContent = `<a href="#" class="text-sm text-blue-600 hover:text-blue-800 hover:underline" data-action="create-connection" data-platform="${platform.value}" data-platform-name="${platform.name}" data-platform-type="${platform.type}">Create</a>`;
+      }
     }
     
     row.innerHTML = `
@@ -2009,7 +2072,7 @@ function loadAdGroupConnections(adGroup) {
       <td class="px-6 py-1 text-sm text-gray-700 border-r border-default">
         ${platform.type}
       </td>
-      <td class="px-6 py-1 text-sm border-r border-default">
+      <td class="px-6 py-1 text-sm border-r border-default" style="position:relative;">
         ${recordIdContent}
       </td>
       <td class="px-6 py-1 text-sm text-gray-700 border-r border-default">
@@ -2074,6 +2137,15 @@ function handleConnectionAction(e) {
       if (typeof openEditConnectionsModal === 'function') {
         openEditConnectionsModal(platformType, platformName);
       }
+    } else if (action === 'inline-record-id' || action === 'edit-manual-record-id') {
+      // DV360 / Simpli.fi — show inline popover
+      const td = anchor.closest('td');
+      if (td) {
+        const currentValue = anchor.dataset.currentValue || '';
+        const platformName = anchor.dataset.platformName || '';
+        const platformValue = anchor.dataset.platform || '';
+        showInlineRecordIdPopover(td, platformName, platformValue, currentValue);
+      }
     }
     return;
   }
@@ -2096,8 +2168,8 @@ function handleEditConnection(platformValue) {
   // Platform name mapping - using Title Case values
   const platformNames = {
     'Trade Desk': 'The Trade Desk',
-    'DV360': 'Display & Video 360',
-    'Simplifi': 'Simplifi',
+    'DV360': 'DV360',
+    'Simplifi': 'Simpli.fi',
     'Google Campaign Manager': 'Google Campaign Manager'
   };
   
@@ -2116,8 +2188,8 @@ function handleDeleteConnection(platformValue) {
   // Platform name mapping - using Title Case values
   const platformNames = {
     'Trade Desk': 'The Trade Desk',
-    'DV360': 'Display & Video 360',
-    'Simplifi': 'Simplifi',
+    'DV360': 'DV360',
+    'Simplifi': 'Simpli.fi',
     'Google Campaign Manager': 'Google Campaign Manager'
   };
   
@@ -2393,6 +2465,7 @@ function saveEditConnections() {
     const platformMapping = {
       'The Trade Desk': 'trade-desk',
       'DV360': 'dv360',
+      'Simpli.fi': 'simplifi',
       'Simplifi': 'simplifi',
       'Google Campaign Manager': 'google-campaign-manager'
     };
@@ -2752,6 +2825,108 @@ function initNewConnectionModal() {
 
 // Initialize New Connection modal when DOM is ready
 document.addEventListener('DOMContentLoaded', initNewConnectionModal);
+
+// ==================== INLINE RECORD ID POPOVER (DV360 / Simpli.fi) ====================
+
+function showInlineRecordIdPopover(tdElement, platformName, platformValue, currentValue) {
+  closeInlineRecordIdPopover();
+
+  const popover = document.createElement('div');
+  popover.className = 'inline-record-id-popover';
+  popover.id = 'inlineRecordIdPopover';
+  popover.dataset.platformName = platformName;
+  popover.dataset.platformValue = platformValue;
+
+  popover.innerHTML = `
+    <input type="text" id="inlineRecordIdInput" placeholder="Enter Record ID" value="${currentValue || ''}" autocomplete="off" />
+    <button type="button" class="popover-btn" id="inlineRecordIdSave" title="Save">
+      <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+    </button>
+    <button type="button" class="popover-btn" id="inlineRecordIdCancel" title="Cancel">
+      <svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+    </button>
+  `;
+
+  tdElement.appendChild(popover);
+
+  const input = popover.querySelector('#inlineRecordIdInput');
+  if (input) { input.focus(); input.select(); }
+
+  popover.querySelector('#inlineRecordIdSave').addEventListener('click', function() {
+    const value = input.value.trim();
+    if (!value) { input.focus(); return; }
+    saveInlineRecordId(platformName, platformValue, value);
+  });
+
+  popover.querySelector('#inlineRecordIdCancel').addEventListener('click', function() {
+    closeInlineRecordIdPopover();
+  });
+
+  input.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      const value = input.value.trim();
+      if (value) saveInlineRecordId(platformName, platformValue, value);
+    } else if (e.key === 'Escape') {
+      closeInlineRecordIdPopover();
+    }
+  });
+
+  setTimeout(() => { document.addEventListener('click', handleOutsideClickPopover); }, 0);
+}
+
+function handleOutsideClickPopover(e) {
+  const popover = document.getElementById('inlineRecordIdPopover');
+  if (popover && !popover.contains(e.target)) closeInlineRecordIdPopover();
+}
+
+function closeInlineRecordIdPopover() {
+  const popover = document.getElementById('inlineRecordIdPopover');
+  if (popover) popover.remove();
+  document.removeEventListener('click', handleOutsideClickPopover);
+}
+
+function saveInlineRecordId(platformName, platformValue, recordIdValue) {
+  try {
+    // Get ad group ID from URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const adGroupId = urlParams.get('id');
+    if (!adGroupId) {
+      if (window.toast && typeof window.toast.error === 'function') window.toast.error('Ad Group ID not found');
+      return;
+    }
+
+    // Load ad group data
+    const data = JSON.parse(localStorage.getItem('adgroups_data_v1') || '[]');
+    let adGroup = data.find(ag => ag.id === adGroupId);
+
+    if (!adGroup) {
+      if (window.toast && typeof window.toast.error === 'function') window.toast.error('Ad Group not found');
+      return;
+    }
+
+    // Store manual Record ID on the ad group
+    if (!adGroup.manualRecordIds) adGroup.manualRecordIds = {};
+    adGroup.manualRecordIds[platformName] = recordIdValue;
+
+    // Save back to localStorage
+    localStorage.setItem('adgroups_data_v1', JSON.stringify(data));
+
+    // Close popover
+    closeInlineRecordIdPopover();
+
+    // Reload the table
+    loadAdGroupConnections(adGroup);
+
+    // Toast
+    if (window.toast && typeof window.toast.success === 'function') {
+      window.toast.success('Record ID saved');
+    }
+  } catch (error) {
+    console.error('Error saving inline Record ID:', error);
+    if (window.toast && typeof window.toast.error === 'function') window.toast.error('Failed to save Record ID');
+  }
+}
 
 
   </script>

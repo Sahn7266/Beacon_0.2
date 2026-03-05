@@ -2350,18 +2350,10 @@ return false;
             const dspSyncChecked = document.getElementById('dspSyncCheckbox')?.checked || false;
             const adServerSyncChecked = document.getElementById('adServerSyncCheckbox')?.checked || false;
             
-            // Map dropdown values to display names
-            const dspDisplayNames = {
-              'trade-desk': 'Trade Desk',
-              'dv360': 'DV360',
-              'simplifi': 'Simplifi'
-            };
-            const adServerDisplayNames = {
-              'google-campaign-manager': 'Google Campaign Manager'
-            };
-            
-            const selectedDSP = dspDropdownValue ? [dspDisplayNames[dspDropdownValue] || dspDropdownValue] : [];
-            const selectedAdServer = adServerDropdownValue ? [adServerDisplayNames[adServerDropdownValue] || adServerDropdownValue] : [];
+            // Store raw dropdown keys in connectors arrays (not display names)
+            // This matches how AdvertiserCampaigns.html and AdvertiserAdGroup.html store them
+            const selectedDSP = dspDropdownValue ? [dspDropdownValue] : [];
+            const selectedAdServer = adServerDropdownValue ? [adServerDropdownValue] : [];
             
             // Build connector status based on sync checkbox state
             const connectionStatus = {};

@@ -109,6 +109,58 @@
       opacity: 1;
       visibility: visible;
     }
+
+    /* Inline Record ID popover */
+    .inline-record-id-popover {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      z-index: 30;
+      margin-top: 2px;
+      background: rgba(120, 120, 120, 0.85);
+      border-radius: 6px;
+      padding: 6px 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+      white-space: nowrap;
+    }
+
+    .inline-record-id-popover input {
+      width: 180px;
+      padding: 4px 10px;
+      border: none;
+      border-radius: 4px;
+      font-size: 13px;
+      outline: none;
+      background: white;
+      color: #333;
+    }
+
+    .inline-record-id-popover input::placeholder {
+      color: #999;
+    }
+
+    .inline-record-id-popover .popover-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 2px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .inline-record-id-popover .popover-btn svg {
+      width: 20px;
+      height: 20px;
+      fill: #1a1a1a;
+    }
+
+    .inline-record-id-popover .popover-btn:hover svg {
+      fill: #000;
+    }
   </style>
 </head>
 
@@ -691,7 +743,7 @@
                 </div>
               </div>
 
-              <!-- Simplifi -->
+              <!-- Simpli.fi -->
               <div class="connector-card border-2 rounded-lg p-4 cursor-pointer transition-all hover:border-blue-300 hover:shadow-md" data-connector="simplifi">
                 <div class="flex items-center justify-between">
                   <div class="flex items-center space-x-3">
@@ -703,7 +755,7 @@
                       class="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                     />
                     <div>
-                      <p class="text-sm font-semibold text-gray-900">Simplifi</p>
+                      <p class="text-sm font-semibold text-gray-900">Simpli.fi</p>
                       <p class="text-xs text-gray-500">Local advertising platform</p>
                     </div>
                   </div>
@@ -785,7 +837,7 @@
     const DEFAULT_ADGROUPS = [
       { platform: 'Google Campaign Manager', platformType: 'Ad Server', status: 'ENABLED',  enabled_at: '2025-11-15 09:23:41', disabled_at: null },
       { platform: 'The Trade Desk',           platformType: 'DSP',       status: 'ENABLED',  enabled_at: '2025-10-08 14:17:55', disabled_at: null },
-      { platform: 'Simplifi',                 platformType: 'DSP',       status: 'DISABLED', enabled_at: '2025-09-22 11:04:18', disabled_at: '2025-12-18 16:30:22' },
+      { platform: 'Simpli.fi',                platformType: 'DSP',       status: 'DISABLED', enabled_at: '2025-09-22 11:04:18', disabled_at: '2025-12-18 16:30:22' },
       { platform: 'StackAdapt',               platformType: 'DSP',       status: 'ENABLED',  enabled_at: '2025-12-01 08:45:33', disabled_at: null }
     ];
 
@@ -864,11 +916,11 @@
               type: 'DSP'
             },
             'dv360': {
-              name: 'Display & Video 360',
+              name: 'DV360',
               type: 'DSP'
             },
             'simplifi': {
-              name: 'Simplifi',
+              name: 'Simpli.fi',
               type: 'DSP'
             },
             'google-campaign-manager': {
@@ -885,12 +937,16 @@
                   ? (advertiser.connectors.status[dspValue] === 'Connected' ? 'ENABLED' : 'DISABLED')
                   : 'ENABLED';
                 
+                const displayName = platformConfig[dspValue].name;
+                const manualId = advertiser.manualRecordIds ? advertiser.manualRecordIds[displayName] : null;
+                
                 platforms.push({
-                  platform: platformConfig[dspValue].name,
+                  platform: displayName,
                   platformType: platformConfig[dspValue].type,
                   status: status,
                   enabled_at: status === 'ENABLED' ? now : '—',
-                  disabled_at: status === 'DISABLED' ? now : null
+                  disabled_at: status === 'DISABLED' ? now : null,
+                  manualRecordId: manualId || null
                 });
               }
             });
@@ -904,12 +960,16 @@
                   ? (advertiser.connectors.status[adServerValue] === 'Connected' ? 'ENABLED' : 'DISABLED')
                   : 'ENABLED';
                 
+                const displayName = platformConfig[adServerValue].name;
+                const manualId = advertiser.manualRecordIds ? advertiser.manualRecordIds[displayName] : null;
+                
                 platforms.push({
-                  platform: platformConfig[adServerValue].name,
+                  platform: displayName,
                   platformType: platformConfig[adServerValue].type,
                   status: status,
                   enabled_at: status === 'ENABLED' ? now : '—',
-                  disabled_at: status === 'DISABLED' ? now : null
+                  disabled_at: status === 'DISABLED' ? now : null,
+                  manualRecordId: manualId || null
                 });
               }
             });
@@ -1087,20 +1147,28 @@
             self.applyFiltersAndRender();
           });
 
-          // Row action delegation (Edit / Delete / Create Connection)
+          // Row action delegation (Edit / Delete / Create Connection / Inline Record ID)
           this.elements.campaignTableBody?.addEventListener('click', function(e) {
-            // Handle anchor click for create-connection
+            // Handle anchor click actions
             const anchor = e.target.closest('a[data-action]');
             if (anchor) {
               e.preventDefault();
               const action = anchor.dataset.action;
+              
               if (action === 'create-connection') {
-                // Get the platform type and name from the data attributes
+                // The Trade Desk / Google Campaign Manager — open modal
                 const platformType = anchor.dataset.platformType || null;
                 const platformName = anchor.dataset.platform || '';
-                // Open the Edit Connections modal to allow creating/enabling the connection
                 if (typeof openEditConnectionsModal === 'function') {
                   openEditConnectionsModal(platformType, platformName);
+                }
+              } else if (action === 'inline-record-id' || action === 'edit-manual-record-id') {
+                // DV360 / Simpli.fi — show inline popover
+                const td = anchor.closest('td');
+                if (td) {
+                  const currentValue = anchor.dataset.currentValue || '';
+                  const platformName = anchor.dataset.platform || '';
+                  showInlineRecordIdPopover(td, platformName, currentValue);
                 }
               }
               return;
@@ -1237,8 +1305,13 @@
             
             // Determine Record ID value based on platform type and connection status
             let recordIdContent = '';
-            if (row.status === 'ENABLED') {
-              // Connected - show appropriate ID based on platform type
+            
+            // Check for manually entered Record ID (DV360/Simpli.fi flow)
+            if (row.manualRecordId) {
+              // Show the manually entered Record ID as editable text
+              recordIdContent = `<a href="#" class="text-sm text-blue-600 hover:text-blue-800 hover:underline" data-action="edit-manual-record-id" data-platform="${row.platform || ''}" data-platform-type="${row.platformType || ''}" data-current-value="${row.manualRecordId}">${row.manualRecordId}</a>`;
+            } else if (row.status === 'ENABLED') {
+              // Connected via sync - show appropriate ID based on platform type
               if (row.platformType === 'DSP') {
                 const deliveryId = advertiser?.deliveryId || '—';
                 recordIdContent = `<span class="text-sm text-gray-900">${deliveryId}</span>`;
@@ -1249,14 +1322,19 @@
                 recordIdContent = `<span class="text-sm text-gray-900">—</span>`;
               }
             } else {
-              // Disconnected - show "Create" hyperlink
-              recordIdContent = `<a href="#" class="text-sm text-blue-600 hover:text-blue-800 hover:underline" data-action="create-connection" data-platform="${row.platform || ''}" data-platform-type="${row.platformType || ''}">Create</a>`;
+              // Disconnected — check if this is a DV360/Simpli.fi platform (inline input) or other (modal)
+              const isInlinePlatform = (row.platform === 'DV360' || row.platform === 'Simpli.fi');
+              if (isInlinePlatform) {
+                recordIdContent = `<a href="#" class="text-sm text-blue-600 hover:text-blue-800 hover:underline" data-action="inline-record-id" data-platform="${row.platform || ''}" data-platform-type="${row.platformType || ''}">Create</a>`;
+              } else {
+                recordIdContent = `<a href="#" class="text-sm text-blue-600 hover:text-blue-800 hover:underline" data-action="create-connection" data-platform="${row.platform || ''}" data-platform-type="${row.platformType || ''}">Create</a>`;
+              }
             }
             
             tr.innerHTML = `
               <td class="px-6 py-1 whitespace-nowrap text-sm text-gray-900 border-r border-gray-200">${row.platform || ''}</td>
               <td class="px-6 py-1 whitespace-nowrap text-sm text-gray-900 border-r border-gray-200">${row.platformType || ''}</td>
-              <td class="px-6 py-1 whitespace-nowrap text-sm border-r border-gray-200">
+              <td class="px-6 py-1 whitespace-nowrap text-sm border-r border-gray-200" style="position:relative;">
                 ${recordIdContent}
               </td>
               <td class="px-6 py-1 whitespace-nowrap text-sm text-gray-900 border-r border-gray-200">${row.enabled_at || ''}</td>
@@ -1482,6 +1560,7 @@
           'The Trade Desk': 'trade-desk',
           'DV360': 'dv360',
           'Display & Video 360': 'dv360',
+          'Simpli.fi': 'simplifi',
           'Simplifi': 'simplifi',
           'Google Campaign Manager': 'google-campaign-manager'
         };
@@ -1853,6 +1932,148 @@
       initEditConnectionsModal();
       initNewConnectionModal();
     });
+
+    // ==================== INLINE RECORD ID POPOVER (DV360 / Simpli.fi) ====================
+
+    function showInlineRecordIdPopover(tdElement, platformName, currentValue) {
+      // Remove any existing popover first
+      closeInlineRecordIdPopover();
+
+      const popover = document.createElement('div');
+      popover.className = 'inline-record-id-popover';
+      popover.id = 'inlineRecordIdPopover';
+      popover.dataset.platform = platformName;
+
+      popover.innerHTML = `
+        <input type="text" id="inlineRecordIdInput" placeholder="Enter Record ID" value="${currentValue || ''}" autocomplete="off" />
+        <button type="button" class="popover-btn" id="inlineRecordIdSave" title="Save">
+          <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+        </button>
+        <button type="button" class="popover-btn" id="inlineRecordIdCancel" title="Cancel">
+          <svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      `;
+
+      tdElement.appendChild(popover);
+
+      // Focus the input
+      const input = popover.querySelector('#inlineRecordIdInput');
+      if (input) {
+        input.focus();
+        input.select();
+      }
+
+      // Save handler
+      popover.querySelector('#inlineRecordIdSave').addEventListener('click', function() {
+        const value = input.value.trim();
+        if (!value) {
+          input.focus();
+          return;
+        }
+        saveInlineRecordId(platformName, value);
+      });
+
+      // Cancel handler
+      popover.querySelector('#inlineRecordIdCancel').addEventListener('click', function() {
+        closeInlineRecordIdPopover();
+      });
+
+      // Enter key to save, Escape to cancel
+      input.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          const value = input.value.trim();
+          if (value) {
+            saveInlineRecordId(platformName, value);
+          }
+        } else if (e.key === 'Escape') {
+          closeInlineRecordIdPopover();
+        }
+      });
+
+      // Close on outside click
+      setTimeout(() => {
+        document.addEventListener('click', handleOutsideClickPopover);
+      }, 0);
+    }
+
+    function handleOutsideClickPopover(e) {
+      const popover = document.getElementById('inlineRecordIdPopover');
+      if (popover && !popover.contains(e.target)) {
+        closeInlineRecordIdPopover();
+      }
+    }
+
+    function closeInlineRecordIdPopover() {
+      const popover = document.getElementById('inlineRecordIdPopover');
+      if (popover) {
+        popover.remove();
+      }
+      document.removeEventListener('click', handleOutsideClickPopover);
+    }
+
+    function saveInlineRecordId(platformName, recordIdValue) {
+      try {
+        // Load advertiser data
+        let advertiser = JSON.parse(localStorage.getItem('adv_selected_data') || '{}');
+        if (!advertiser.id) {
+          if (window.toast && typeof window.toast.error === 'function') {
+            window.toast.error('Advertiser data not found');
+          }
+          return;
+        }
+
+        // Find the matching platform in app.adgroups and set manualRecordId
+        if (app && app.adgroups) {
+          const platformRow = app.adgroups.find(ag => ag.platform === platformName);
+          if (platformRow) {
+            platformRow.manualRecordId = recordIdValue;
+          }
+          app.saveAdGroups();
+        }
+
+        // Also store on the advertiser's connectors for persistence
+        if (!advertiser.manualRecordIds) {
+          advertiser.manualRecordIds = {};
+        }
+        advertiser.manualRecordIds[platformName] = recordIdValue;
+        localStorage.setItem('adv_selected_data', JSON.stringify(advertiser));
+
+        // Also update adv_list_data
+        try {
+          const advertisers = JSON.parse(localStorage.getItem('adv_list_data') || '[]');
+          const selectedId = localStorage.getItem('adv_selected_id');
+          const idx = advertisers.findIndex(a => String(a.id) === String(selectedId));
+          if (idx !== -1) {
+            if (!advertisers[idx].manualRecordIds) advertisers[idx].manualRecordIds = {};
+            advertisers[idx].manualRecordIds[platformName] = recordIdValue;
+            localStorage.setItem('adv_list_data', JSON.stringify(advertisers));
+          }
+        } catch (e) {
+          console.warn('Failed to update adv_list_data:', e);
+        }
+
+        // Close popover
+        closeInlineRecordIdPopover();
+
+        // Re-render the table
+        if (app) {
+          app.applyFiltersAndRender();
+        }
+
+        // Toast
+        if (window.toast && typeof window.toast.success === 'function') {
+          window.toast.success('Record ID saved');
+        } else if (typeof showSuccessToast === 'function') {
+          showSuccessToast('Record ID saved', 'Saved', 2500);
+        }
+      } catch (error) {
+        console.error('Error saving inline Record ID:', error);
+        if (window.toast && typeof window.toast.error === 'function') {
+          window.toast.error('Failed to save Record ID');
+        }
+      }
+    }
   </script>
 
   <!-- Platform Details Modal (single instance; remove duplicates below if present) -->
