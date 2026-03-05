@@ -179,18 +179,15 @@
 
     /* Inline Record ID popover */
     .inline-record-id-popover {
-      position: absolute;
-      top: 100%;
-      left: 0;
-      z-index: 30;
-      margin-top: 2px;
-      background: rgba(120, 120, 120, 0.85);
+      position: fixed;
+      z-index: 9999;
+      background: rgba(70, 70, 70, 0.95);
       border-radius: 6px;
       padding: 6px 8px;
       display: flex;
       align-items: center;
       gap: 6px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
       white-space: nowrap;
     }
 
@@ -2886,11 +2883,18 @@ window.addEventListener('adGroupsUpdated', () => {
 function showInlineRecordIdPopover(tdElement, platformName, platformValue, currentValue) {
   closeInlineRecordIdPopover();
 
+  // Get position of the td element
+  const rect = tdElement.getBoundingClientRect();
+
   const popover = document.createElement('div');
   popover.className = 'inline-record-id-popover';
   popover.id = 'inlineRecordIdPopover';
   popover.dataset.platformName = platformName;
   popover.dataset.platformValue = platformValue;
+
+  // Position the popover using fixed positioning relative to viewport
+  popover.style.left = rect.left + 'px';
+  popover.style.top = (rect.bottom + 4) + 'px';
 
   popover.innerHTML = `
     <input type="text" id="inlineRecordIdInput" placeholder="Enter Record ID" value="${currentValue || ''}" autocomplete="off" />
@@ -2902,7 +2906,7 @@ function showInlineRecordIdPopover(tdElement, platformName, platformValue, curre
     </button>
   `;
 
-  tdElement.appendChild(popover);
+  document.body.appendChild(popover);
 
   const input = popover.querySelector('#inlineRecordIdInput');
   if (input) { input.focus(); input.select(); }
