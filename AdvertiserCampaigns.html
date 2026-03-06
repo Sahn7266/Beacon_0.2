@@ -821,6 +821,34 @@
                 <p class="mt-1 text-xs text-gray-500">Common identifier across all platforms</p>
               </div>
 
+              <!-- Flight Dates -->
+              <div class="grid grid-cols-2 gap-4">
+                <div>
+                  <label for="beaconStartDate" class="block text-sm font-medium text-gray-700 mb-2">
+                    Start Date <span class="text-red-500">*</span>
+                  </label>
+                  <input 
+                    type="date" 
+                    id="beaconStartDate" 
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    required
+                  />
+                  <p class="mt-1 text-xs text-gray-500">Campaign start date</p>
+                </div>
+                <div>
+                  <label for="beaconEndDate" class="block text-sm font-medium text-gray-700 mb-2">
+                    End Date <span class="text-red-500">*</span>
+                  </label>
+                  <input 
+                    type="date" 
+                    id="beaconEndDate" 
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    required
+                  />
+                  <p class="mt-1 text-xs text-gray-500">Campaign end date</p>
+                </div>
+              </div>
+
             </div>
           </div>
 
@@ -1372,6 +1400,21 @@ if (this.elements.createBtn) {
       // Reset form and state immediately (like ad groups)
       const form = document.getElementById('createCampaignForm');
       if (form) form.reset();
+      
+      // Set default dates after reset completes (using setTimeout to ensure reset is done)
+      setTimeout(() => {
+        const today = new Date();
+        const startDateInput = document.getElementById('beaconStartDate');
+        const endDateInput = document.getElementById('beaconEndDate');
+        if (startDateInput) {
+          startDateInput.value = today.toISOString().split('T')[0];
+        }
+        if (endDateInput) {
+          const tenYearsAhead = new Date(today);
+          tenYearsAhead.setFullYear(today.getFullYear() + 10);
+          endDateInput.value = tenYearsAhead.toISOString().split('T')[0];
+        }
+      }, 0);
       
       // Reset connectors toggle and status badges
       const connectorsContent = document.getElementById('connectorsContent');
@@ -2917,6 +2960,8 @@ function handleCampaignCreation(redirectToAdGroups) {
     // Beacon Fields mapped to Common Data
     beaconCampaignId: document.getElementById('beaconCampaignId')?.value || '',
     beaconCampaignName: document.getElementById('beaconCampaignName')?.value || '',
+    beaconStartDate: document.getElementById('beaconStartDate')?.value || '',
+    beaconEndDate: document.getElementById('beaconEndDate')?.value || '',
     // New Ad Server fields
     adServerCampaignName: document.getElementById('adServerCampaignName')?.value || '',
     adServerSchedule: document.getElementById('adServerSchedule')?.value || '',
@@ -2951,6 +2996,8 @@ function handleCampaignCreation(redirectToAdGroups) {
     entityId: campaign.id,
     data: {
       beaconCampaignName: campaign.beaconCampaignName,
+      beaconStartDate: campaign.beaconStartDate,
+      beaconEndDate: campaign.beaconEndDate,
       seed: campaign.seed,
       organization: campaign.organization,
       pacing: campaign.pacing,

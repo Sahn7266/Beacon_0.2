@@ -338,6 +338,28 @@
                           </td>
                         </tr>
 
+                        <!-- Start Date -->
+                        <tr class="border-b border-default">
+                          <td class="px-3 py-1 text-sm font-medium border-r border-default">
+                            Start Date
+                          </td>
+                          <td class="px-6 py-1 text-sm">
+                            <span id="displayBeaconStartDate" class="text-gray-800 break-words">N/A</span>
+                            <input id="beaconStartDate" type="date" class="hidden campaign-details-input" aria-label="Start Date" title="Start Date" />
+                          </td>
+                        </tr>
+
+                        <!-- End Date -->
+                        <tr class="border-b border-default">
+                          <td class="px-3 py-1 text-sm font-medium border-r border-default">
+                            End Date
+                          </td>
+                          <td class="px-6 py-1 text-sm">
+                            <span id="displayBeaconEndDate" class="text-gray-800 break-words">N/A</span>
+                            <input id="beaconEndDate" type="date" class="hidden campaign-details-input" aria-label="End Date" title="End Date" />
+                          </td>
+                        </tr>
+
                       </tbody>
                     </table>
                   </div>
@@ -602,6 +624,8 @@
   // Beacon Fields
   { span: 'displayBeaconCampaignId', input: 'beaconCampaignId' },
   { span: 'displayBeaconCampaignName', input: 'beaconCampaignName' },
+  { span: 'displayBeaconStartDate', input: 'beaconStartDate' },
+  { span: 'displayBeaconEndDate', input: 'beaconEndDate' },
   // DSP Fields (these are linked to actual campaign data)
   { span: 'displayCampaignSeed', input: 'campaignSeed' },
   { span: 'displayCampaignOrganization', input: 'campaignOrganization' },
@@ -626,6 +650,8 @@
   // Beacon Fields (now linked to Beacon field data)
   'beaconCampaignId',
   'beaconCampaignName',
+  'beaconStartDate',
+  'beaconEndDate',
   // DSP Fields
   'campaignSeed',
   'campaignOrganization',
@@ -1610,6 +1636,21 @@ window.addEventListener('DOMContentLoaded', () => {
         el.textContent = `$${Number(value || 0).toLocaleString()}`;
       } else if (format === 'percentage') {
         el.textContent = value ? `${value}%` : 'N/A';
+      } else if (format === 'date') {
+        // Format date as MM-DD-YYYY
+        if (value) {
+          const date = new Date(value);
+          if (!isNaN(date.getTime())) {
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            const year = date.getFullYear();
+            el.textContent = `${month}-${day}-${year}`;
+          } else {
+            el.textContent = 'N/A';
+          }
+        } else {
+          el.textContent = 'N/A';
+        }
       } else {
         el.textContent = value || 'N/A';
       }
@@ -1627,6 +1668,8 @@ window.addEventListener('DOMContentLoaded', () => {
   // Beacon Fields
   safeSet('displayBeaconCampaignId', campaign.beaconCampaignId);
   safeSet('displayBeaconCampaignName', campaign.beaconCampaignName);
+  safeSet('displayBeaconStartDate', campaign.beaconStartDate, 'date');
+  safeSet('displayBeaconEndDate', campaign.beaconEndDate, 'date');
   // DSP Fields
   safeSet('displayCampaignSeed', campaign.seed);
   safeSet('displayCampaignOrganization', campaign.organization);
@@ -1649,6 +1692,8 @@ window.addEventListener('DOMContentLoaded', () => {
   // Beacon Fields
   safeInput('beaconCampaignId', campaign.beaconCampaignId);
   safeInput('beaconCampaignName', campaign.beaconCampaignName);
+  safeInput('beaconStartDate', campaign.beaconStartDate);
+  safeInput('beaconEndDate', campaign.beaconEndDate);
   // DSP Fields
   safeInput('campaignSeed', campaign.seed);
   safeInput('campaignOrganization', campaign.organization);
