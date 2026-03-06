@@ -351,7 +351,7 @@ function buildEntityTreeHTML() {
   // Campaign rows with nested ad groups
   campaigns.forEach((cam, idx) => {
     const camChildrenId = 'entityTree-cam' + idx + '-children';
-    const camName = cam.name || cam.id || 'Unnamed Campaign';
+    const camName = cam.beaconCampaignName || cam.name || cam.id || 'Unnamed Campaign';
     const childAGs = adgroupsByCampaign[cam.id] || [];
 
     html += `
@@ -554,7 +554,7 @@ function proceedWithCOCreation() {
     newCO.entities.push({
       type: 'campaign',
       id: camId,
-      name: cam ? cam.name : camId,
+      name: cam ? (cam.beaconCampaignName || cam.name) : camId,
       fields: {}
     });
   });

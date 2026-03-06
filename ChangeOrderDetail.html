@@ -34,6 +34,68 @@
       /* Ad Group - indent 40px */
       margin-left: 70px;
     }
+
+    /* Entity flag label */
+    .entity-flag {
+      display: inline-block;
+      margin-left: 8px;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      user-select: none;
+    }
+    .entity-flag.flag-edit {
+      background-color: #fef3c7;
+      color: #92400e;
+      border: 1px solid #fbbf24;
+    }
+    .entity-flag.flag-edit:hover {
+      background-color: #fde68a;
+    }
+    .entity-flag.flag-create {
+      background-color: #d1fae5;
+      color: #065f46;
+      border: 1px solid #34d399;
+    }
+    .entity-flag.flag-create:hover {
+      background-color: #a7f3d0;
+    }
+
+    /* Entity flag label */
+    .entity-flag {
+      display: inline-block;
+      margin-left: 8px;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      user-select: none;
+    }
+    .entity-flag.flag-edit {
+      background-color: #fef3c7;
+      color: #92400e;
+      border: 1px solid #fbbf24;
+    }
+    .entity-flag.flag-edit:hover {
+      background-color: #fde68a;
+    }
+    .entity-flag.flag-create {
+      background-color: #d1fae5;
+      color: #065f46;
+      border: 1px solid #34d399;
+    }
+    .entity-flag.flag-create:hover {
+      background-color: #a7f3d0;
+    }
   </style>
 </head>
 
@@ -285,6 +347,44 @@
       if (arrow) arrow.classList.toggle('open');
     };
 
+    // Toggle entity flag between EDIT and CREATE
+    window.toggleEntityFlag = function(type, id) {
+      if (!co || !co.entities) return;
+      const entity = co.entities.find(e => e.type === type && e.id === id);
+      if (!entity) return;
+
+      // Toggle between 'edit' and 'create'
+      entity.flag = (entity.flag === 'create') ? 'edit' : 'create';
+      
+      // Save and re-render
+      co.modifiedDate = new Date().toISOString();
+      saveChangeOrder(co);
+      buildEntitySections(co);
+      
+      if (typeof showToast === 'function') {
+        showToast(`Flag set to ${entity.flag.toUpperCase()}`, 'success');
+      }
+    };
+
+    // Toggle entity flag between EDIT and CREATE
+    window.toggleEntityFlag = function(type, id) {
+      if (!co || !co.entities) return;
+      const entity = co.entities.find(e => e.type === type && e.id === id);
+      if (!entity) return;
+
+      // Toggle between 'edit' and 'create'
+      entity.flag = (entity.flag === 'create') ? 'edit' : 'create';
+      
+      // Save and re-render
+      co.modifiedDate = new Date().toISOString();
+      saveChangeOrder(co);
+      buildEntitySections(co);
+      
+      if (typeof showToast === 'function') {
+        showToast(`Flag set to ${entity.flag.toUpperCase()}`, 'success');
+      }
+    };
+
     // Close manage entities modal
     window.closeManageEntitiesModal = function() {
       document.getElementById('entitySelectModal').classList.add('hidden');
@@ -511,6 +611,24 @@
       const depthClass = `entity-depth-${depth}`;
       const orphanWarning = isOrphan ? '<span class="text-xs text-orange-600 ml-2">(No parent campaign selected)</span>' : '';
 
+      // For campaigns, look up the name from Beacon data if not available
+      let displayName = entity.name || entity.id;
+      if (entity.type === 'campaign' && !entity.name) {
+        try {
+          const tree = JSON.parse(localStorage.getItem('campaign_tree_groups') || '{}');
+          let allCams = [];
+          if (tree.campaigns) allCams = allCams.concat(tree.campaigns);
+          if (tree.groups) tree.groups.forEach(g => { if (g.campaigns) allCams = allCams.concat(g.campaigns); });
+          const camData = allCams.find(c => c.id === entity.id);
+          if (camData) displayName = camData.beaconCampaignName || camData.name || entity.id;
+        } catch {}
+      }
+
+      // Determine entity flag (EDIT or CREATE)
+      const entityFlag = entity.flag || 'edit';
+      const flagClass = entityFlag === 'create' ? 'flag-create' : 'flag-edit';
+      const flagLabel = entityFlag === 'create' ? 'CREATE' : 'EDIT';
+
       const section = document.createElement('div');
       section.className = `co-entity-section ${depthClass}`;
       section.innerHTML = `
@@ -518,7 +636,8 @@
           <div class="entity-title">
             <span class="toggle-arrow open" id="${secId}-arrow">▶</span>
             ${entityPill(entity.type)}
-            ${entity.name || entity.id}
+            ${displayName}
+            <span class="entity-flag ${flagClass}" onclick="event.stopPropagation();toggleEntityFlag('${entity.type}','${entity.id}')" title="Click to toggle between EDIT and CREATE">${flagLabel}</span>
             ${orphanWarning}
           </div>
           ${!isAdv ? `<span class="remove-btn" onclick="event.stopPropagation();removeEntity('${entity.type}','${entity.id}')">✕ Remove</span>` : ''}
@@ -585,7 +704,7 @@
           <div class="co-fields-grid">
             <div class="co-field-group">
               <label>Campaign Name</label>
-              <input type="text" value="${fields.name || camData.name || ''}" placeholder="Campaign name" data-cam-id="${entity.id}" data-cam-field="name" class="w-full border border-gray-300 rounded-md px-2 py-1 text-sm" />
+              <input type="text" value="${fields.name || camData.beaconCampaignName || camData.name || ''}" placeholder="Campaign name" data-cam-id="${entity.id}" data-cam-field="name" class="w-full border border-gray-300 rounded-md px-2 py-1 text-sm" />
             </div>
             <div class="co-field-group">
               <label>Flight Start Date</label>
@@ -761,7 +880,7 @@
 
       campaigns.forEach((cam, idx) => {
         const camChildrenId = 'manageTree-cam' + idx + '-children';
-        const camName = cam.name || cam.id;
+        const camName = cam.beaconCampaignName || cam.name || cam.id;
         const isCamSelected = selectedCamIds.has(cam.id);
         const childAGs = adgroupsByCampaign[cam.id] || [];
 
@@ -866,7 +985,7 @@
         newEntities.push({
           type: 'campaign',
           id: camId,
-          name: cam ? cam.name : camId,
+          name: cam ? (cam.beaconCampaignName || cam.name) : camId,
           advertiserId: advEntity ? advEntity.id : null,
           fields: existing ? existing.fields : {}
         });
