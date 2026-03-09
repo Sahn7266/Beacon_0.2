@@ -442,6 +442,34 @@
                             </select>
                           </td>
                         </tr>
+                        <tr class="border-b border-default">
+                          <td class="px-3 py-1 text-sm font-medium border-r border-default">Total Invoice Budget</td>
+                          <td class="px-6 py-1 text-sm">
+                            <span id="displayTotalInvoiceBudget" data-bind="adv.totalInvoiceBudget" class="text-gray-800 break-words">—</span>
+                            <input id="inputTotalInvoiceBudget" type="number" data-bind="adv.totalInvoiceBudget" class="hidden adgroup-details-input" aria-label="Total Invoice Budget" title="Total Invoice Budget" min="0">
+                          </td>
+                        </tr>
+                        <tr class="border-b border-default">
+                          <td class="px-3 py-1 text-sm font-medium border-r border-default">Total Budget</td>
+                          <td class="px-6 py-1 text-sm">
+                            <span id="displayTotalBudget" data-bind="adv.totalBudget" class="text-gray-800 break-words">—</span>
+                            <input id="inputTotalBudget" type="number" data-bind="adv.totalBudget" class="hidden adgroup-details-input" aria-label="Total Budget" title="Total Budget" min="0">
+                          </td>
+                        </tr>
+                        <tr class="border-b border-default">
+                          <td class="px-3 py-1 text-sm font-medium border-r border-default">Total Invoice Impressions</td>
+                          <td class="px-6 py-1 text-sm">
+                            <span id="displayTotalInvoiceImpressions" data-bind="adv.totalInvoiceImpressions" class="text-gray-800 break-words">—</span>
+                            <input id="inputTotalInvoiceImpressions" type="number" data-bind="adv.totalInvoiceImpressions" class="hidden adgroup-details-input" aria-label="Total Invoice Impressions" title="Total Invoice Impressions" min="0">
+                          </td>
+                        </tr>
+                        <tr class="border-b border-default">
+                          <td class="px-3 py-1 text-sm font-medium border-r border-default">Total Impressions</td>
+                          <td class="px-6 py-1 text-sm">
+                            <span id="displayTotalImpressions" data-bind="adv.totalImpressions" class="text-gray-800 break-words">—</span>
+                            <input id="inputTotalImpressions" type="number" data-bind="adv.totalImpressions" class="hidden adgroup-details-input" aria-label="Total Impressions" title="Total Impressions" min="0">
+                          </td>
+                        </tr>
                       </tbody>
                     </table>
                   </div>
@@ -839,6 +867,10 @@
           bindAll('adv.id', adv.id, '');
           bindAll('adv.account', adv.account, 'N/A');
           bindAll('adv.state', adv.state, 'N/A');
+          bindAll('adv.totalInvoiceBudget', adv.totalInvoiceBudget, '—');
+          bindAll('adv.totalBudget', adv.totalBudget, '—');
+          bindAll('adv.totalInvoiceImpressions', adv.totalInvoiceImpressions, '—');
+          bindAll('adv.totalImpressions', adv.totalImpressions, '—');
           
           // Generate and persist mock DSP/Ad Server IDs if they don't exist
           let needsUpdate = false;
@@ -1078,7 +1110,11 @@
       // Pairs of span/input elements for inline editing - Beacon Fields
       const beaconPairs = [
         { span: 'displayAdvertiserName', input: 'inputAdvertiserName' },
-        { span: 'displayState', input: 'inputState' }
+        { span: 'displayState', input: 'inputState' },
+        { span: 'displayTotalInvoiceBudget', input: 'inputTotalInvoiceBudget' },
+        { span: 'displayTotalBudget', input: 'inputTotalBudget' },
+        { span: 'displayTotalInvoiceImpressions', input: 'inputTotalInvoiceImpressions' },
+        { span: 'displayTotalImpressions', input: 'inputTotalImpressions' }
       ];
 
       // DSP Fields pairs
@@ -1308,6 +1344,10 @@
           // Update Beacon fields
           advertisers[idx].name = now.inputAdvertiserName?.trim() || '';
           advertisers[idx].state = now.inputState?.trim() || '';
+          advertisers[idx].totalInvoiceBudget = now.inputTotalInvoiceBudget?.trim() || '';
+          advertisers[idx].totalBudget = now.inputTotalBudget?.trim() || '';
+          advertisers[idx].totalInvoiceImpressions = now.inputTotalInvoiceImpressions?.trim() || '';
+          advertisers[idx].totalImpressions = now.inputTotalImpressions?.trim() || '';
 
           // Update DSP fields if they exist
           if (!advertisers[idx].dsp) advertisers[idx].dsp = {};

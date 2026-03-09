@@ -35,11 +35,10 @@
       margin-left: 70px;
     }
 
-    /* Entity flag label */
-    .entity-flag {
-      display: inline-block;
+    /* Entity flag dropdown */
+    .entity-flag-select {
       margin-left: 8px;
-      padding: 2px 8px;
+      padding: 2px 6px;
       border-radius: 4px;
       font-size: 10px;
       font-weight: 600;
@@ -47,54 +46,24 @@
       letter-spacing: 0.5px;
       cursor: pointer;
       transition: all 0.15s ease;
-      user-select: none;
+      border: 1px solid #d1d5db;
+      background-color: #f9fafb;
+      color: #6b7280;
+      outline: none;
     }
-    .entity-flag.flag-edit {
+    .entity-flag-select:focus {
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+    }
+    .entity-flag-select.flag-edit {
       background-color: #fef3c7;
       color: #92400e;
-      border: 1px solid #fbbf24;
+      border-color: #fbbf24;
     }
-    .entity-flag.flag-edit:hover {
-      background-color: #fde68a;
-    }
-    .entity-flag.flag-create {
+    .entity-flag-select.flag-create {
       background-color: #d1fae5;
       color: #065f46;
-      border: 1px solid #34d399;
-    }
-    .entity-flag.flag-create:hover {
-      background-color: #a7f3d0;
-    }
-
-    /* Entity flag label */
-    .entity-flag {
-      display: inline-block;
-      margin-left: 8px;
-      padding: 2px 8px;
-      border-radius: 4px;
-      font-size: 10px;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      cursor: pointer;
-      transition: all 0.15s ease;
-      user-select: none;
-    }
-    .entity-flag.flag-edit {
-      background-color: #fef3c7;
-      color: #92400e;
-      border: 1px solid #fbbf24;
-    }
-    .entity-flag.flag-edit:hover {
-      background-color: #fde68a;
-    }
-    .entity-flag.flag-create {
-      background-color: #d1fae5;
-      color: #065f46;
-      border: 1px solid #34d399;
-    }
-    .entity-flag.flag-create:hover {
-      background-color: #a7f3d0;
+      border-color: #34d399;
     }
   </style>
 </head>
@@ -347,41 +316,29 @@
       if (arrow) arrow.classList.toggle('open');
     };
 
-    // Toggle entity flag between EDIT and CREATE
-    window.toggleEntityFlag = function(type, id) {
+    // Handle entity flag dropdown change
+    window.changeEntityFlag = function(selectEl, type, id) {
       if (!co || !co.entities) return;
       const entity = co.entities.find(e => e.type === type && e.id === id);
       if (!entity) return;
 
-      // Toggle between 'edit' and 'create'
-      entity.flag = (entity.flag === 'create') ? 'edit' : 'create';
+      const newValue = selectEl.value;
+      entity.flag = newValue || '';
       
-      // Save and re-render
-      co.modifiedDate = new Date().toISOString();
-      saveChangeOrder(co);
-      buildEntitySections(co);
-      
-      if (typeof showToast === 'function') {
-        showToast(`Flag set to ${entity.flag.toUpperCase()}`, 'success');
+      // Update dropdown styling
+      selectEl.classList.remove('flag-edit', 'flag-create');
+      if (newValue === 'edit') {
+        selectEl.classList.add('flag-edit');
+      } else if (newValue === 'create') {
+        selectEl.classList.add('flag-create');
       }
-    };
-
-    // Toggle entity flag between EDIT and CREATE
-    window.toggleEntityFlag = function(type, id) {
-      if (!co || !co.entities) return;
-      const entity = co.entities.find(e => e.type === type && e.id === id);
-      if (!entity) return;
-
-      // Toggle between 'edit' and 'create'
-      entity.flag = (entity.flag === 'create') ? 'edit' : 'create';
       
-      // Save and re-render
+      // Save (no re-render needed since we updated the select in place)
       co.modifiedDate = new Date().toISOString();
       saveChangeOrder(co);
-      buildEntitySections(co);
       
-      if (typeof showToast === 'function') {
-        showToast(`Flag set to ${entity.flag.toUpperCase()}`, 'success');
+      if (typeof showToast === 'function' && newValue) {
+        showToast(`Flag set to ${newValue.toUpperCase()}`, 'success');
       }
     };
 
@@ -624,10 +581,9 @@
         } catch {}
       }
 
-      // Determine entity flag (EDIT or CREATE)
-      const entityFlag = entity.flag || 'edit';
-      const flagClass = entityFlag === 'create' ? 'flag-create' : 'flag-edit';
-      const flagLabel = entityFlag === 'create' ? 'CREATE' : 'EDIT';
+      // Determine entity flag (-, EDIT, or CREATE)
+      const entityFlag = entity.flag || '';
+      const flagClass = entityFlag === 'create' ? 'flag-create' : entityFlag === 'edit' ? 'flag-edit' : '';
 
       const section = document.createElement('div');
       section.className = `co-entity-section ${depthClass}`;
@@ -637,7 +593,11 @@
             <span class="toggle-arrow open" id="${secId}-arrow">▶</span>
             ${entityPill(entity.type)}
             ${displayName}
-            <span class="entity-flag ${flagClass}" onclick="event.stopPropagation();toggleEntityFlag('${entity.type}','${entity.id}')" title="Click to toggle between EDIT and CREATE">${flagLabel}</span>
+            <select class="entity-flag-select ${flagClass}" onclick="event.stopPropagation()" onchange="changeEntityFlag(this,'${entity.type}','${entity.id}')" title="Select action type">
+              <option value="" ${entityFlag === '' ? 'selected' : ''}>-</option>
+              <option value="edit" ${entityFlag === 'edit' ? 'selected' : ''}>EDIT</option>
+              <option value="create" ${entityFlag === 'create' ? 'selected' : ''}>CREATE</option>
+            </select>
             ${orphanWarning}
           </div>
           ${!isAdv ? `<span class="remove-btn" onclick="event.stopPropagation();removeEntity('${entity.type}','${entity.id}')">✕ Remove</span>` : ''}
@@ -653,12 +613,31 @@
       if (entity.type === 'advertiser') {
         const fields = entity.fields || {};
         return `
-          <div class="flex gap-8 text-sm text-gray-600 mb-4">
-            <span><strong>Account #:</strong> ${adv ? (adv.account || adv.accountNumber || '—') : '—'}</span>
-            <span><strong>Name:</strong> ${entity.name || '—'}</span>
-          </div>
-        
-            
+          <div class="co-fields-grid">
+            <div class="co-field-group">
+              <label>Account #</label>
+              <input type="text" value="${adv ? (adv.account || adv.accountNumber || '') : ''}" class="w-full border border-gray-300 rounded-md px-2 py-1 text-sm bg-gray-100" readonly />
+            </div>
+            <div class="co-field-group">
+              <label>Name</label>
+              <input type="text" value="${fields.name || entity.name || ''}" placeholder="Advertiser name" data-adv-field="name" class="w-full border border-gray-300 rounded-md px-2 py-1 text-sm" />
+            </div>
+            <div class="co-field-group">
+              <label>Total Invoice Budget</label>
+              <input type="number" value="${fields.totalInvoiceBudget || adv?.totalInvoiceBudget || ''}" placeholder="0" data-adv-field="totalInvoiceBudget" class="w-full border border-gray-300 rounded-md px-2 py-1 text-sm" min="0" />
+            </div>
+            <div class="co-field-group">
+              <label>Total Budget</label>
+              <input type="number" value="${fields.totalBudget || adv?.totalBudget || ''}" placeholder="0" data-adv-field="totalBudget" class="w-full border border-gray-300 rounded-md px-2 py-1 text-sm" min="0" />
+            </div>
+            <div class="co-field-group">
+              <label>Total Invoice Impressions</label>
+              <input type="number" value="${fields.totalInvoiceImpressions || adv?.totalInvoiceImpressions || ''}" placeholder="0" data-adv-field="totalInvoiceImpressions" class="w-full border border-gray-300 rounded-md px-2 py-1 text-sm" min="0" />
+            </div>
+            <div class="co-field-group">
+              <label>Total Impressions</label>
+              <input type="number" value="${fields.totalImpressions || adv?.totalImpressions || ''}" placeholder="0" data-adv-field="totalImpressions" class="w-full border border-gray-300 rounded-md px-2 py-1 text-sm" min="0" />
+            </div>
             <div class="co-field-group" style="grid-column: 1 / -1;">
               <label>Advertiser Notes</label>
               <textarea data-adv-field="notes" class="w-full border border-gray-300 rounded-md px-2 py-1 text-sm" rows="2" placeholder="Special instructions or notes about this advertiser...">${fields.notes || ''}</textarea>
@@ -679,32 +658,61 @@
         } catch {}
 
         const fields = entity.fields || {};
+        
+        // Helper to check DSP selection
+        const isDspSelected = (val) => (fields.dsp || camData.dsp || '') === val ? 'selected' : '';
 
         return `
-            <div class="flex gap-8 text-sm text-gray-600 mb-4">
-            <span><strong>ID:</strong> ${entity.id}</span>
-            <span><strong>DSP:</strong> ${camData.dsp || '—'}</span>
-            <span><strong>Start Date:</strong> ${camData.startDate ? new Date(camData.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—'}</span>
-            <span><strong>End Date:</strong> ${camData.endDate ? new Date(camData.endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—'}</span>
-            </div>
           <div class="co-fields-grid">
+            <div class="co-field-group">
+              <label>Campaign ID</label>
+              <input type="text" value="${entity.id}" class="w-full border border-gray-300 rounded-md px-2 py-1 text-sm bg-gray-100" readonly />
+            </div>
+            <div class="co-field-group">
+              <label>DSP</label>
+              <select data-cam-id="${entity.id}" data-cam-field="dsp" class="w-full border border-gray-300 rounded-md px-2 py-1 text-sm">
+                <option value="">-- Select DSP --</option>
+                <option value="Trade Desk" ${isDspSelected('Trade Desk')}>Trade Desk</option>
+                <option value="DV360" ${isDspSelected('DV360')}>DV360</option>
+                <option value="Simpli.fi" ${isDspSelected('Simpli.fi')}>Simpli.fi</option>
+              </select>
+            </div>
+            <div class="co-field-group">
+              <label>Start Date</label>
+              <input type="date" value="${fields.beaconStartDate || camData.beaconStartDate || camData.startDate || ''}" data-cam-id="${entity.id}" data-cam-field="beaconStartDate" class="w-full border border-gray-300 rounded-md px-2 py-1 text-sm" />
+            </div>
+            <div class="co-field-group">
+              <label>End Date</label>
+              <input type="date" value="${fields.beaconEndDate || camData.beaconEndDate || camData.endDate || ''}" data-cam-id="${entity.id}" data-cam-field="beaconEndDate" class="w-full border border-gray-300 rounded-md px-2 py-1 text-sm" />
+            </div>
             <div class="co-field-group">
               <label>GCM Campaign Name</label>
               <input type="text" value="${fields.name || camData.beaconCampaignName || camData.name || ''}" placeholder="Campaign name" data-cam-id="${entity.id}" data-cam-field="name" class="w-full border border-gray-300 rounded-md px-2 py-1 text-sm" />
             </div>
             <div class="co-field-group">
               <label>DSP Campaign Name</label>
-              <input type="text" value="${fields.name || camData.beaconCampaignName || camData.name || ''}" placeholder="Campaign name" data-cam-id="${entity.id}" data-cam-field="name" class="w-full border border-gray-300 rounded-md px-2 py-1 text-sm" />
+              <input type="text" value="${fields.dspName || camData.name || ''}" placeholder="DSP Campaign name" data-cam-id="${entity.id}" data-cam-field="dspName" class="w-full border border-gray-300 rounded-md px-2 py-1 text-sm" />
             </div>
-           
-  
             <div class="co-field-group">
               <label>Template</label>
-              <input type="text" value="${fields.frequencyCap || ''}" placeholder="e.g. Programmatic Display" data-cam-id="${entity.id}" data-cam-field="frequencyCap" class="w-full border border-gray-300 rounded-md px-2 py-1 text-sm" />
+              <select data-cam-id="${entity.id}" data-cam-field="beaconTemplate" class="w-full border border-gray-300 rounded-md px-2 py-1 text-sm">
+                <option value="">-- Select --</option>
+                <option value="Association Affinity" ${(fields.beaconTemplate || camData.beaconTemplate) === 'Association Affinity' ? 'selected' : ''}>Association Affinity</option>
+                <option value="Audio" ${(fields.beaconTemplate || camData.beaconTemplate) === 'Audio' ? 'selected' : ''}>Audio</option>
+                <option value="CTV" ${(fields.beaconTemplate || camData.beaconTemplate) === 'CTV' ? 'selected' : ''}>CTV</option>
+                <option value="Display" ${(fields.beaconTemplate || camData.beaconTemplate) === 'Display' ? 'selected' : ''}>Display</option>
+                <option value="DOOH" ${(fields.beaconTemplate || camData.beaconTemplate) === 'DOOH' ? 'selected' : ''}>DOOH</option>
+                <option value="Email" ${(fields.beaconTemplate || camData.beaconTemplate) === 'Email' ? 'selected' : ''}>Email</option>
+                <option value="Native" ${(fields.beaconTemplate || camData.beaconTemplate) === 'Native' ? 'selected' : ''}>Native</option>
+                <option value="Social" ${(fields.beaconTemplate || camData.beaconTemplate) === 'Social' ? 'selected' : ''}>Social</option>
+                <option value="Video" ${(fields.beaconTemplate || camData.beaconTemplate) === 'Video' ? 'selected' : ''}>Video</option>
+                <option value="YouTube" ${(fields.beaconTemplate || camData.beaconTemplate) === 'YouTube' ? 'selected' : ''}>YouTube</option>
+                <option value="Search" ${(fields.beaconTemplate || camData.beaconTemplate) === 'Search' ? 'selected' : ''}>Search</option>
+              </select>
             </div>
             <div class="co-field-group">
               <label>DSP Impressions</label>
-              <input type="text" value="${fields.frequencyCap || ''}" placeholder="e.g. 500,000" data-cam-id="${entity.id}" data-cam-field="frequencyCap" class="w-full border border-gray-300 rounded-md px-2 py-1 text-sm" />
+              <input type="number" value="${fields.beaconDspImpressions || camData.beaconDspImpressions || ''}" placeholder="e.g. 500000" data-cam-id="${entity.id}" data-cam-field="beaconDspImpressions" class="w-full border border-gray-300 rounded-md px-2 py-1 text-sm" min="0" />
             </div>
             <div class="co-field-group" style="grid-column: 1 / -1;">
               <label>Campaign Notes / Instructions</label>
@@ -724,29 +732,83 @@
 
         const fields = entity.fields || {};
 
+        // Helper to check if a tactic value is selected
+        const isTacticSelected = (val) => (fields.multiviewTactic || agData.multiviewTactic) === val ? 'selected' : '';
+        
+        // Helper to check if a classification value is selected
+        const isClassificationSelected = (val) => (fields.multiviewClassification || agData.multiviewClassification) === val ? 'selected' : '';
+
         return `
-            <div class="flex gap-8 text-sm text-gray-600 mb-4">
-            <span><strong>ID:</strong> ${entity.id}</span>
-            <span><strong>Classification:</strong> ${agData.classification || agData.multiviewClassification || agData.beaconClassification || '—'}</span>
-            <span><strong>Tactic:</strong> ${agData.tactic || agData.multiviewTactic || agData.beaconTactic || '—'}</span>
-            <span><strong>Audience:</strong> ${agData.audience || '—'}</span>
-            </div>
           <div class="co-fields-grid">
             <div class="co-field-group">
+              <label>Ad Group ID</label>
+              <input type="text" value="${entity.id}" class="w-full border border-gray-300 rounded-md px-2 py-1 text-sm bg-gray-100" readonly />
+            </div>
+            <div class="co-field-group">
+              <label>Ad Group Name</label>
+              <input type="text" value="${fields.name || agData.name || ''}" placeholder="Ad group name" data-ag-id="${entity.id}" data-ag-field="name" class="w-full border border-gray-300 rounded-md px-2 py-1 text-sm" />
+            </div>
+            <div class="co-field-group">
+              <label>MV Classification</label>
+              <select data-ag-id="${entity.id}" data-ag-field="multiviewClassification" class="w-full border border-gray-300 rounded-md px-2 py-1 text-sm">
+                <option value="">-- Select --</option>
+                <option value="association affinity" ${isClassificationSelected('association affinity')}>Association Affinity</option>
+                <option value="audio" ${isClassificationSelected('audio')}>Audio</option>
+                <option value="ctv" ${isClassificationSelected('ctv')}>CTV</option>
+                <option value="display" ${isClassificationSelected('display')}>Display</option>
+                <option value="dooh" ${isClassificationSelected('dooh')}>DOOH</option>
+                <option value="email" ${isClassificationSelected('email')}>Email</option>
+                <option value="native" ${isClassificationSelected('native')}>Native</option>
+                <option value="social" ${isClassificationSelected('social')}>Social</option>
+                <option value="video" ${isClassificationSelected('video')}>Video</option>
+                <option value="youtube" ${isClassificationSelected('youtube')}>YouTube</option>
+                <option value="search" ${isClassificationSelected('search')}>Search</option>
+              </select>
+            </div>
+            <div class="co-field-group">
+              <label>Tactic</label>
+              <select data-ag-id="${entity.id}" data-ag-field="multiviewTactic" class="w-full border border-gray-300 rounded-md px-2 py-1 text-sm">
+                <option value="">-- Select --</option>
+                <option value="persona" ${isTacticSelected('persona')}>Persona</option>
+                <option value="keyword" ${isTacticSelected('keyword')}>Keyword</option>
+                <option value="site retargeting" ${isTacticSelected('site retargeting')}>Site Retargeting</option>
+                <option value="data onboarding" ${isTacticSelected('data onboarding')}>Data Onboarding</option>
+                <option value="contextual" ${isTacticSelected('contextual')}>Contextual</option>
+                <option value="native" ${isTacticSelected('native')}>Native</option>
+                <option value="retargeting" ${isTacticSelected('retargeting')}>Retargeting</option>
+                <option value="geofencing" ${isTacticSelected('geofencing')}>Geofencing</option>
+                <option value="crm onboarding" ${isTacticSelected('crm onboarding')}>CRM Onboarding</option>
+                <option value="search retargeting" ${isTacticSelected('search retargeting')}>Search Retargeting</option>
+                <option value="lookalike" ${isTacticSelected('lookalike')}>Lookalike</option>
+              </select>
+            </div>
+            <div class="co-field-group">
+              <label>Content Category</label>
+              <input type="text" value="${fields.contentCategory || agData.contentCategory || ''}" placeholder="Auto-filled from Tactic" data-ag-id="${entity.id}" data-ag-field="contentCategory" class="w-full border border-gray-300 rounded-md px-2 py-1 text-sm bg-gray-100" readonly />
+            </div>
+            <div class="co-field-group">
+              <label>Geo Target</label>
+              <input type="text" value="${fields.geoTarget || agData.geoTarget || ''}" placeholder="e.g. US, CA, NY" data-ag-id="${entity.id}" data-ag-field="geoTarget" class="w-full border border-gray-300 rounded-md px-2 py-1 text-sm" />
+            </div>
+            <div class="co-field-group">
               <label>Start Date <span class="text-red-500 font-bold">*</span></label>
-              <input type="date" value="${fields.startDate || ''}" data-ag-id="${entity.id}" data-ag-field="startDate" class="w-full border border-gray-300 rounded-md px-2 py-1 text-sm required-field" />
+              <input type="date" value="${fields.beaconStartDate || agData.beaconStartDate || ''}" data-ag-id="${entity.id}" data-ag-field="beaconStartDate" class="w-full border border-gray-300 rounded-md px-2 py-1 text-sm" />
             </div>
             <div class="co-field-group">
               <label>End Date <span class="text-red-500 font-bold">*</span></label>
-              <input type="date" value="${fields.endDate || ''}" data-ag-id="${entity.id}" data-ag-field="endDate" class="w-full border border-gray-300 rounded-md px-2 py-1 text-sm required-field" />
+              <input type="date" value="${fields.beaconEndDate || agData.beaconEndDate || ''}" data-ag-id="${entity.id}" data-ag-field="beaconEndDate" class="w-full border border-gray-300 rounded-md px-2 py-1 text-sm" />
             </div>
             <div class="co-field-group">
               <label>Impressions <span class="text-red-500 font-bold">*</span></label>
-              <input type="text" value="${fields.impressions || ''}" placeholder="e.g. 500,000" data-ag-id="${entity.id}" data-ag-field="impressions" class="w-full border border-gray-300 rounded-md px-2 py-1 text-sm required-field" />
+              <input type="number" value="${fields.beaconImpressions || agData.beaconImpressions || ''}" placeholder="e.g. 500000" data-ag-id="${entity.id}" data-ag-field="beaconImpressions" class="w-full border border-gray-300 rounded-md px-2 py-1 text-sm" min="0" />
             </div>
             <div class="co-field-group">
-              <label>Monthly Impressions</label>
-              <input type="text" value="${fields.monthlyImpressions || ''}" placeholder="Optional" data-ag-id="${entity.id}" data-ag-field="monthlyImpressions" class="w-full border border-gray-300 rounded-md px-2 py-1 text-sm" />
+              <label>Landing Page</label>
+              <input type="url" value="${fields.landingPage || agData.landingPage || ''}" placeholder="https://..." data-ag-id="${entity.id}" data-ag-field="landingPage" class="w-full border border-gray-300 rounded-md px-2 py-1 text-sm" />
+            </div>
+            <div class="co-field-group" style="grid-column: 1 / -1;">
+              <label>UTM Code</label>
+              <input type="text" value="${fields.utmCode || agData.utmCode || ''}" placeholder="utm_source=...&utm_medium=..." data-ag-id="${entity.id}" data-ag-field="utmCode" class="w-full border border-gray-300 rounded-md px-2 py-1 text-sm" />
             </div>
             <div class="co-field-group" style="grid-column: 1 / -1;">
               <label>Additional Notes / Instructions</label>

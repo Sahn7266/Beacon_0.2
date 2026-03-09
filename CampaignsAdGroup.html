@@ -776,7 +776,7 @@
               <!-- Name -->
               <div>
                 <label for="beaconAdGroupName" class="block text-sm font-medium text-gray-700 mb-2">
-                  Name <span class="text-red-500">*</span>
+                  Ad Group Name <span class="text-red-500">*</span>
                 </label>
                 <input 
                   type="text" 
@@ -799,8 +799,91 @@
                   required
                 >
                   <option value="">Select campaign</option>
+                  <option value="__create_new__">+ Create Campaign</option>
                 </select>
                 <p class="mt-1 text-xs text-gray-500">Campaign to tie this ad group to</p>
+              </div>
+
+              <!-- Template -->
+              <div>
+                <label for="beaconTemplate" class="block text-sm font-medium text-gray-700 mb-2">Template</label>
+                <select 
+                  id="beaconTemplate" 
+                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                >
+                  <option value="">-- Select --</option>
+                  <option value="Association Affinity">Association Affinity</option>
+                  <option value="Audio">Audio</option>
+                  <option value="CTV">CTV</option>
+                  <option value="Display">Display</option>
+                  <option value="DOOH">DOOH</option>
+                  <option value="Email">Email</option>
+                  <option value="Native">Native</option>
+                  <option value="Social">Social</option>
+                  <option value="Video">Video</option>
+                  <option value="YouTube">YouTube</option>
+                  <option value="Search">Search</option>
+                </select>
+                <p class="mt-1 text-xs text-gray-500">Auto-copies to MV Classification (lowercased)</p>
+              </div>
+
+              <!-- Tactic -->
+              <div>
+                <label for="beaconMultiviewTactic" class="block text-sm font-medium text-gray-700 mb-2">Tactic</label>
+                <select 
+                  id="beaconMultiviewTactic" 
+                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                >
+                  <option value="">-- Select --</option>
+                  <option value="persona">Persona</option>
+                  <option value="keyword">Keyword</option>
+                  <option value="site retargeting">Site Retargeting</option>
+                  <option value="data onboarding">Data Onboarding</option>
+                  <option value="contextual">Contextual</option>
+                  <option value="native">Native</option>
+                  <option value="retargeting">Retargeting</option>
+                  <option value="geofencing">Geofencing</option>
+                  <option value="crm onboarding">CRM Onboarding</option>
+                  <option value="search retargeting">Search Retargeting</option>
+                  <option value="lookalike">Lookalike</option>
+                </select>
+                <p class="mt-1 text-xs text-gray-500">Auto-copies to Content Category</p>
+              </div>
+
+              <!-- Content Category (readonly, auto-filled from Tactic) -->
+              <div>
+                <label for="beaconContentCategory" class="block text-sm font-medium text-gray-700 mb-2">Content Category</label>
+                <input 
+                  type="text" 
+                  id="beaconContentCategory" 
+                  class="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-600"
+                  placeholder="Auto-filled from Tactic"
+                  readonly
+                />
+                <p class="mt-1 text-xs text-gray-500">Auto-copied from Tactic</p>
+              </div>
+
+              <!-- Multiview Classification -->
+              <div>
+                <label for="beaconMultiviewClassification" class="block text-sm font-medium text-gray-700 mb-2">MV Classification</label>
+                <select 
+                  id="beaconMultiviewClassification" 
+                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                >
+                  <option value="">-- Select --</option>
+                  <option value="association affinity">Association Affinity</option>
+                  <option value="audio">Audio</option>
+                  <option value="ctv">CTV</option>
+                  <option value="display">Display</option>
+                  <option value="dooh">DOOH</option>
+                  <option value="email">Email</option>
+                  <option value="native">Native</option>
+                  <option value="social">Social</option>
+                  <option value="video">Video</option>
+                  <option value="youtube">YouTube</option>
+                  <option value="search">Search</option>
+                </select>
+                <p class="mt-1 text-xs text-gray-500">Auto-copied from Template (lowercased)</p>
               </div>
 
               <!-- Audience -->
@@ -814,35 +897,69 @@
                 />
               </div>
 
-              <!-- Multiview Classification -->
+              <!-- Geo Target -->
               <div>
-                <label for="beaconMultiviewClassification" class="block text-sm font-medium text-gray-700 mb-2">Multiview Classification</label>
-                <select 
-                  id="beaconMultiviewClassification" 
+                <label for="beaconGeoTarget" class="block text-sm font-medium text-gray-700 mb-2">Geo Target</label>
+                <input 
+                  type="text" 
+                  id="beaconGeoTarget" 
                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                >
-                  <option value="">-- Select --</option>
-                  <option value="association affinity">Association Affinity</option>
-                  <option value="audio">Audio</option>
-                  <option value="display">Display</option>
-                  <option value="social">Social</option>
-                  <option value="video">Video</option>
-                </select>
+                  placeholder="e.g. US, CA, NY"
+                />
               </div>
 
-              <!-- Multiview Tactic -->
+              <!-- Start / End Date Row -->
+              <div class="grid grid-cols-2 gap-4">
+                <div>
+                  <label for="beaconStartDate" class="block text-sm font-medium text-gray-700 mb-2">Start Date</label>
+                  <input 
+                    type="date" 
+                    id="beaconStartDate" 
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+                <div>
+                  <label for="beaconEndDate" class="block text-sm font-medium text-gray-700 mb-2">End Date</label>
+                  <input 
+                    type="date" 
+                    id="beaconEndDate" 
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+              </div>
+
+              <!-- Impressions -->
               <div>
-                <label for="beaconMultiviewTactic" class="block text-sm font-medium text-gray-700 mb-2">Multiview Tactic</label>
-                <select 
-                  id="beaconMultiviewTactic" 
+                <label for="beaconImpressions" class="block text-sm font-medium text-gray-700 mb-2">Impressions</label>
+                <input 
+                  type="number" 
+                  id="beaconImpressions" 
                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                >
-                  <option value="">-- Select --</option>
-                  <option value="persona">Persona</option>
-                  <option value="keyword">Keyword</option>
-                  <option value="site retargeting">Site Retargeting</option>
-                  <option value="data onboarding">Data Onboarding</option>
-                </select>
+                  placeholder="0"
+                  min="0"
+                />
+              </div>
+
+              <!-- Landing Page -->
+              <div>
+                <label for="beaconLandingPage" class="block text-sm font-medium text-gray-700 mb-2">Landing Page</label>
+                <input 
+                  type="url" 
+                  id="beaconLandingPage" 
+                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="https://..."
+                />
+              </div>
+
+              <!-- UTM Code -->
+              <div>
+                <label for="beaconUtmCode" class="block text-sm font-medium text-gray-700 mb-2">UTM Code</label>
+                <input 
+                  type="text" 
+                  id="beaconUtmCode" 
+                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="utm_source=...&utm_medium=..."
+                />
               </div>
 
             </div>
@@ -2231,6 +2348,38 @@
   });
 
 
+  // ═══════════════════════════════════════════════════════════════════════════
+  // AUTO-COPY RULES: Tactic → Content Category, Template → MV Classification
+  // ═══════════════════════════════════════════════════════════════════════════
+  document.addEventListener('DOMContentLoaded', () => {
+    // Tactic → Content Category
+    const tacticSelect = document.getElementById('beaconMultiviewTactic');
+    const contentCategoryField = document.getElementById('beaconContentCategory');
+    if (tacticSelect && contentCategoryField) {
+      tacticSelect.addEventListener('change', () => {
+        contentCategoryField.value = tacticSelect.value;
+      });
+    }
+    
+    // Template → MV Classification (lowercased)
+    const templateSelect = document.getElementById('beaconTemplate');
+    const mvClassificationSelect = document.getElementById('beaconMultiviewClassification');
+    if (templateSelect && mvClassificationSelect) {
+      templateSelect.addEventListener('change', () => {
+        const val = templateSelect.value.toLowerCase();
+        // Find matching option in MV Classification
+        const options = mvClassificationSelect.options;
+        for (let i = 0; i < options.length; i++) {
+          if (options[i].value === val) {
+            mvClassificationSelect.value = val;
+            break;
+          }
+        }
+      });
+    }
+  });
+
+
   document.addEventListener('DOMContentLoaded', () => {
     // Get current page filename without query params
     const currentPage = window.location.pathname.split('/').pop().split('?')[0];
@@ -2410,6 +2559,43 @@ window.addEventListener('DOMContentLoaded', () => {
 
   // Load and display associated ad groups
   loadAdGroupsForCampaign(campaignId);
+  
+  // ═══════════════════════════════════════════════════════════════════════════
+  // DSP INHERITANCE: Scope DSP dropdown to match campaign's DSP selection
+  // ═══════════════════════════════════════════════════════════════════════════
+  if (campaign.connectors && campaign.connectors.dsp) {
+    // campaignDsp can be an array or string - normalize to string (first element if array)
+    const campaignDspRaw = campaign.connectors.dsp;
+    const campaignDsp = Array.isArray(campaignDspRaw) ? campaignDspRaw[0] : campaignDspRaw;
+    
+    const dspMenu = document.getElementById('dspDropdownMenu');
+    const dspHiddenInput = document.getElementById('dspDropdown');
+    const dspTrigger = document.getElementById('dspDropdownTrigger');
+    
+    if (dspMenu && campaignDsp) {
+      const options = dspMenu.querySelectorAll('.platform-select-option');
+      options.forEach(option => {
+        const optionValue = option.dataset.value;
+        if (optionValue === '' || optionValue === campaignDsp) {
+          option.style.display = '';
+        } else {
+          option.style.display = 'none';
+        }
+      });
+      
+      // Auto-select the campaign's DSP
+      if (dspHiddenInput) {
+        dspHiddenInput.value = campaignDsp;
+        const valueSpan = dspTrigger?.querySelector('.platform-select-value');
+        const selectedOption = dspMenu.querySelector(`.platform-select-option[data-value="${campaignDsp}"]`);
+        if (valueSpan && selectedOption) {
+          valueSpan.textContent = selectedOption.querySelector('span')?.textContent || campaignDsp;
+          valueSpan.classList.remove('text-gray-500');
+          valueSpan.classList.add('text-gray-900');
+        }
+      }
+    }
+  }
 });
 
 // Function to load ad groups associated with the current campaign
@@ -3308,9 +3494,17 @@ function handleAdGroupCreation() {
       name: document.getElementById('beaconAdGroupName')?.value?.trim() || '',
       campaign: campaignId, // Use the current campaign ID
       campaignId: campaignId,
+      beaconTemplate: document.getElementById('beaconTemplate')?.value || '',
       multiviewClassification: document.getElementById('beaconMultiviewClassification')?.value || '',
       multiviewTactic: document.getElementById('beaconMultiviewTactic')?.value || '',
+      contentCategory: document.getElementById('beaconContentCategory')?.value || '',
       beaconAudience: document.getElementById('beaconAudience')?.value?.trim() || '',
+      geoTarget: document.getElementById('beaconGeoTarget')?.value?.trim() || '',
+      beaconStartDate: document.getElementById('beaconStartDate')?.value || '',
+      beaconEndDate: document.getElementById('beaconEndDate')?.value || '',
+      beaconImpressions: document.getElementById('beaconImpressions')?.value || '',
+      landingPage: document.getElementById('beaconLandingPage')?.value?.trim() || '',
+      utmCode: document.getElementById('beaconUtmCode')?.value?.trim() || '',
       
       // DSP Fields (detailed fields)
       dspName: document.getElementById('adGroupName')?.value?.trim() || '',
@@ -3322,7 +3516,7 @@ function handleAdGroupCreation() {
       target: document.getElementById('adGroupTarget')?.value?.trim() || '',
       dspAudience: document.getElementById('adGroupAudience')?.value || '',
       frequency: getFrequencyValue(),
-      geos: document.getElementById('adGroupGeos')?.value || '',
+      geos: document.getElementById('beaconGeoTarget')?.value?.trim() || document.getElementById('adGroupGeos')?.value || '',
       baseBid: document.getElementById('adGroupBaseBid')?.value?.trim() || '',
       maxBid: document.getElementById('adGroupMaxBid')?.value?.trim() || '',
       
@@ -3332,8 +3526,8 @@ function handleAdGroupCreation() {
       adServerCompatibility: document.getElementById('adServerCompatibility')?.value || '',
       adServerDimensions: getMultiSelectValues('dimensions'),
       adServerTestingStarts: document.getElementById('adServerTestingStarts')?.value || '',
-      adServerStartDate: document.getElementById('adServerStartDate')?.value || '',
-      adServerEndDate: document.getElementById('adServerEndDate')?.value || '',
+      adServerStartDate: document.getElementById('beaconStartDate')?.value || document.getElementById('adServerStartDate')?.value || '',
+      adServerEndDate: document.getElementById('beaconEndDate')?.value || document.getElementById('adServerEndDate')?.value || '',
       adServerCostStructure: document.getElementById('adServerCostStructure')?.value || '',
       adServerCapCost: document.getElementById('adServerCapCost')?.value || '',
       

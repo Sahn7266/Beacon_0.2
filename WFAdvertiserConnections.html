@@ -830,6 +830,50 @@
       PAGINATION: { DEFAULT_ROWS: 15, MAX_ROWS: 200 }
     };
     
+    // ═══════════════════════════════════════════════════════════════════════════
+    // DELETE LOCK HELPERS: Prevent deletion of connections that are synced
+    // ═══════════════════════════════════════════════════════════════════════════
+    function isConnectionSynced(platform) {
+      try {
+        const advertiserData = localStorage.getItem('adv_selected_data');
+        if (!advertiserData) return false;
+        
+        const advertiser = JSON.parse(advertiserData);
+        if (!advertiser.connectors || !advertiser.connectors.status) return false;
+        
+        // Check if any platform value matches and is Connected
+        for (const [key, status] of Object.entries(advertiser.connectors.status)) {
+          if (status === 'Connected') {
+            // Map platform key to display name for comparison
+            const platformMap = {
+              'trade-desk': 'The Trade Desk',
+              'dv360': 'DV360',
+              'simplifi': 'Simpli.fi',
+              'google-campaign-manager': 'Google Campaign Manager',
+              'amazon-ads': 'Amazon Ads'
+            };
+            const displayName = platformMap[key] || key;
+            if (displayName === platform || key === platform) {
+              return true;
+            }
+          }
+        }
+        return false;
+      } catch (e) {
+        console.warn('Failed to check connection sync status:', e);
+        return false;
+      }
+    }
+    
+    function showDeleteLockMessage(platform) {
+      const message = `Cannot delete "${platform}" — connection is currently synced. Disable sync first before removing.`;
+      if (typeof showToast === 'function') {
+        showToast(message, 'warning');
+      } else {
+        alert(message);
+      }
+    }
+    
     // === SAMPLE AD GROUP DATA ===
     const DEFAULT_ADGROUPS = [
       { platform: 'Google Campaign Manager', platformType: 'Ad Server', status: 'ENABLED',  enabled_at: '2025-11-15 09:23:41', disabled_at: null },
@@ -1183,7 +1227,13 @@
               }
               return;
             } else if (action === 'delete') {
-              self.confirmDelete?.(btn.dataset.platform);
+              // Check if connection is synced before allowing delete
+              const platform = btn.dataset.platform;
+              if (isConnectionSynced(platform)) {
+                showDeleteLockMessage(platform);
+                return;
+              }
+              self.confirmDelete?.(platform);
             }
           });
 

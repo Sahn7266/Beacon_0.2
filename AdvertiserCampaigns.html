@@ -788,7 +788,7 @@
           <div class="wizard-content active" data-content="1">
             <div class="mb-6">
               <h3 class="text-xl font-semibold text-gray-900 mb-2">Campaign Details</h3>
-              <p class="text-sm text-gray-600">Enter the basic information for the new campaign</p>
+              <p class="text-sm text-gray-600">Beacon CAD fields are collected first, then platform-specific fields in Step 3.</p>
             </div>
 
             <div class="space-y-5">
@@ -809,7 +809,7 @@
               <!-- Campaign Name -->
               <div>
                 <label for="beaconCampaignName" class="block text-sm font-medium text-gray-700 mb-2">
-                  Name <span class="text-red-500">*</span>
+                  Campaign Name <span class="text-red-500">*</span>
                 </label>
                 <input 
                   type="text" 
@@ -819,6 +819,47 @@
                   required
                 />
                 <p class="mt-1 text-xs text-gray-500">Common identifier across all platforms</p>
+              </div>
+
+              <!-- Template -->
+              <div>
+                <label for="beaconTemplate" class="block text-sm font-medium text-gray-700 mb-2">
+                  Template <span class="text-red-500">*</span>
+                </label>
+                <select
+                  id="beaconTemplate"
+                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  required
+                >
+                  <option value="">-- Select Template --</option>
+                  <option value="Programmatic Display">Programmatic Display</option>
+                  <option value="Programmatic Video">Programmatic Video</option>
+                  <option value="Programmatic Audio">Programmatic Audio</option>
+                  <option value="Connected TV">Connected TV</option>
+                  <option value="Paid Social">Paid Social</option>
+                  <option value="Paid Search">Paid Search</option>
+                  <option value="Event Targeting">Event Targeting</option>
+                  <option value="Native Video">Native Video</option>
+                  <option value="DOOH">DOOH</option>
+                  <option value="PLD Display">PLD Display</option>
+                  <option value="PLD Video">PLD Video</option>
+                </select>
+              </div>
+
+              <!-- DSP Impressions -->
+              <div>
+                <label for="beaconDspImpressions" class="block text-sm font-medium text-gray-700 mb-2">
+                  DSP Impressions <span class="text-red-500">*</span>
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  step="1"
+                  id="beaconDspImpressions"
+                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="1600000"
+                  required
+                />
               </div>
 
               <!-- Flight Dates -->
@@ -847,6 +888,10 @@
                   />
                   <p class="mt-1 text-xs text-gray-500">Campaign end date</p>
                 </div>
+              </div>
+
+              <div class="border-t border-gray-200 pt-4">
+                <p class="text-xs text-gray-500">Platform-specific fields for The Trade Desk, Google Campaign Manager, DV360, and Simpli.fi are configured in Step 3.</p>
               </div>
 
             </div>
@@ -2851,12 +2896,34 @@ document.getElementById('createCampaignForm').addEventListener('submit', functio
   handleCampaignCreation(false);
 });
 
+// Helper function to validate only Step 1 (Beacon Fields) - platform config is optional
+function validateBeaconFields() {
+  const requiredFields = [
+    { id: 'beaconCampaignName', label: 'Campaign Name' }
+  ];
+  
+  for (const field of requiredFields) {
+    const el = document.getElementById(field.id);
+    if (!el || !el.value.trim()) {
+      // Show error and navigate to Step 1
+      const msg = `Please fill in "${field.label}" in Beacon Fields (Step 1)`;
+      if (typeof showToast === 'function') {
+        showToast(msg, 'error');
+      } else {
+        alert(msg);
+      }
+      campaignWizardGoToStep(1);
+      el?.focus();
+      return false;
+    }
+  }
+  return true;
+}
+
 // Handle "Create Campaign" button
 document.getElementById('campaignCreateBtn')?.addEventListener('click', function() {
-  // Validate the form first
-  const form = document.getElementById('createCampaignForm');
-  if (!form.checkValidity()) {
-    form.reportValidity();
+  // Only validate Step 1 Beacon Fields - platform config fields are optional
+  if (!validateBeaconFields()) {
     return;
   }
   handleCampaignCreation(false);
@@ -2864,10 +2931,8 @@ document.getElementById('campaignCreateBtn')?.addEventListener('click', function
 
 // Handle "Create & Add Ad Group" button
 document.getElementById('createAndAddAdGroup')?.addEventListener('click', function() {
-  // Validate the form first
-  const form = document.getElementById('createCampaignForm');
-  if (!form.checkValidity()) {
-    form.reportValidity();
+  // Only validate Step 1 Beacon Fields - platform config fields are optional
+  if (!validateBeaconFields()) {
     return;
   }
   handleCampaignCreation(true);
@@ -2960,6 +3025,10 @@ function handleCampaignCreation(redirectToAdGroups) {
     // Beacon Fields mapped to Common Data
     beaconCampaignId: document.getElementById('beaconCampaignId')?.value || '',
     beaconCampaignName: document.getElementById('beaconCampaignName')?.value || '',
+    beaconTemplate: document.getElementById('beaconTemplate')?.value || '',
+    beaconDspImpressions: document.getElementById('beaconDspImpressions')?.value || '',
+    template: document.getElementById('beaconTemplate')?.value || '',
+    dspImpressions: document.getElementById('beaconDspImpressions')?.value || '',
     beaconStartDate: document.getElementById('beaconStartDate')?.value || '',
     beaconEndDate: document.getElementById('beaconEndDate')?.value || '',
     // New Ad Server fields
@@ -3019,6 +3088,8 @@ function handleCampaignCreation(redirectToAdGroups) {
       // Beacon fields
       beaconCampaignId: campaign.beaconCampaignId,
       beaconCampaignName: campaign.beaconCampaignName,
+      beaconTemplate: campaign.beaconTemplate,
+      beaconDspImpressions: campaign.beaconDspImpressions,
       // Ad Server fields in audit
       adServerCampaignName: campaign.adServerCampaignName,
       adServerSchedule: campaign.adServerSchedule,

@@ -346,14 +346,23 @@
                       <!-- Multiview Classification -->
                       <tr class="border-b border-default">
                         <td class="px-3 py-1 text-sm font-medium border-r border-default">
-                          Multiview Classification
+                          MV Classification
                         </td>
                         <td class="px-6 py-1 text-sm">
                           <span id="displayMultiviewClassification" class="text-gray-800 break-words">N/A</span>
-                          <select id="inputMultiviewClassification" class="hidden adgroup-details-input" title="Multiview Classification selection" aria-label="Select multiview classification">
+                          <select id="inputMultiviewClassification" class="hidden adgroup-details-input" title="MV Classification selection" aria-label="Select MV classification">
                             <option value="">-- Select --</option>
-                            <option value="Active">Active</option>
-                            <option value="Inactive">Inactive</option>
+                            <option value="association affinity">Association Affinity</option>
+                            <option value="audio">Audio</option>
+                            <option value="ctv">CTV</option>
+                            <option value="display">Display</option>
+                            <option value="dooh">DOOH</option>
+                            <option value="email">Email</option>
+                            <option value="native">Native</option>
+                            <option value="social">Social</option>
+                            <option value="video">Video</option>
+                            <option value="youtube">YouTube</option>
+                            <option value="search">Search</option>
                           </select>
                         </td>
                       </tr>
@@ -361,15 +370,35 @@
                       <!-- Multiview Tactic -->
                       <tr class="border-b border-default">
                         <td class="px-3 py-1 text-sm font-medium border-r border-default">
-                          Multiview Tactic
+                          Tactic
                         </td>
                         <td class="px-6 py-1 text-sm">
                           <span id="displayMultiviewTactic" class="text-gray-800 break-words">N/A</span>
-                          <select id="inputMultiviewTactic" class="hidden adgroup-details-input" title="Multiview Tactic selection" aria-label="Select multiview tactic">
+                          <select id="inputMultiviewTactic" class="hidden adgroup-details-input" title="Tactic selection" aria-label="Select tactic">
                             <option value="">-- Select --</option>
-                            <option value="Active">Active</option>
-                            <option value="Inactive">Inactive</option>
+                            <option value="persona">Persona</option>
+                            <option value="keyword">Keyword</option>
+                            <option value="site retargeting">Site Retargeting</option>
+                            <option value="data onboarding">Data Onboarding</option>
+                            <option value="contextual">Contextual</option>
+                            <option value="native">Native</option>
+                            <option value="retargeting">Retargeting</option>
+                            <option value="geofencing">Geofencing</option>
+                            <option value="crm onboarding">CRM Onboarding</option>
+                            <option value="search retargeting">Search Retargeting</option>
+                            <option value="lookalike">Lookalike</option>
                           </select>
+                        </td>
+                      </tr>
+
+                      <!-- Content Category (readonly, auto-filled from Tactic) -->
+                      <tr class="border-b border-default">
+                        <td class="px-3 py-1 text-sm font-medium border-r border-default">
+                          Content Category
+                        </td>
+                        <td class="px-6 py-1 text-sm">
+                          <span id="displayContentCategory" class="text-gray-800 break-words">N/A</span>
+                          <input id="inputContentCategory" type="text" class="hidden adgroup-details-input bg-gray-100" readonly title="Content Category (auto-filled from Tactic)" aria-label="Content Category" />
                         </td>
                       </tr>
 
@@ -723,6 +752,7 @@
   { span: 'displayCampaign', input: 'inputCampaign' },
   { span: 'displayMultiviewClassification', input: 'inputMultiviewClassification' },
   { span: 'displayMultiviewTactic', input: 'inputMultiviewTactic' },
+  { span: 'displayContentCategory', input: 'inputContentCategory' },
   { span: 'displayBeaconAudience', input: 'inputBeaconAudience' },
   // DSP Fields (these are linked to actual ad group data)
   { span: 'displayDspName', input: 'adGroupNameInput' },
@@ -756,6 +786,7 @@
   'inputCampaign',
   'inputMultiviewClassification',
   'inputMultiviewTactic',
+  'inputContentCategory',
   'inputBeaconAudience',
   // DSP Fields
   'adGroupNameInput',
@@ -958,6 +989,7 @@
                             if (now.inputCampaign !== undefined) adGroup.campaign = now.inputCampaign;
                             if (now.inputMultiviewClassification !== undefined) adGroup.multiviewClassification = now.inputMultiviewClassification;
                             if (now.inputMultiviewTactic !== undefined) adGroup.multiviewTactic = now.inputMultiviewTactic;
+                            if (now.inputContentCategory !== undefined) adGroup.contentCategory = now.inputContentCategory;
                             if (now.inputBeaconAudience !== undefined) adGroup.beaconAudience = now.inputBeaconAudience;
                             
                             // Update DSP Fields
@@ -1883,6 +1915,7 @@ document.addEventListener('DOMContentLoaded', function () {
   safeSet('displayCampaign', adGroup.campaign);
   safeSet('displayMultiviewClassification', adGroup.multiviewClassification);
   safeSet('displayMultiviewTactic', adGroup.multiviewTactic);
+  safeSet('displayContentCategory', adGroup.contentCategory);
   safeSet('displayBeaconAudience', adGroup.beaconAudience);
   
   // DSP Fields section
@@ -1958,6 +1991,7 @@ document.addEventListener('DOMContentLoaded', function () {
   safeInput('inputCampaign', adGroup.campaign);
   safeInput('inputMultiviewClassification', adGroup.multiviewClassification);
   safeInput('inputMultiviewTactic', adGroup.multiviewTactic);
+  safeInput('inputContentCategory', adGroup.contentCategory);
   safeInput('inputBeaconAudience', adGroup.beaconAudience);
   
   // DSP Field inputs

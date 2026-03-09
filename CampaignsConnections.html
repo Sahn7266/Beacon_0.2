@@ -2737,6 +2737,52 @@ function initNewConnectionModal() {
 // Initialize New Connection modal when DOM is ready
 document.addEventListener('DOMContentLoaded', initNewConnectionModal);
 
+// ═══════════════════════════════════════════════════════════════════════════
+// DELETE LOCK HELPERS: Prevent deletion of connections that are synced
+// ═══════════════════════════════════════════════════════════════════════════
+function isCampaignConnectionSynced(platformValue) {
+  try {
+    const urlParams = new URLSearchParams(window.location.search);
+    const campaignId = urlParams.get('campaignId');
+    if (!campaignId) return false;
+    
+    const data = JSON.parse(localStorage.getItem('campaign_tree_groups') || '{}');
+    let campaign = null;
+    let campaigns = Array.isArray(data.campaigns) ? data.campaigns : [];
+    let groups = Array.isArray(data.groups) ? data.groups : [];
+    
+    // Find the campaign
+    campaign = campaigns.find(c => c.id === campaignId);
+    
+    if (!campaign) {
+      for (const group of groups) {
+        if (group.campaigns) {
+          campaign = group.campaigns.find(c => c.id === campaignId);
+          if (campaign) break;
+        }
+      }
+    }
+    
+    if (!campaign || !campaign.connectors || !campaign.connectors.status) return false;
+    
+    return campaign.connectors.status[platformValue] === 'Connected';
+  } catch (e) {
+    console.warn('Failed to check campaign connection sync status:', e);
+    return false;
+  }
+}
+
+function showCampaignDeleteLockMessage(platformName) {
+  const message = `Cannot delete "${platformName}" — connection is currently synced. Disable sync first before removing.`;
+  if (window.toast && typeof window.toast.warning === 'function') {
+    window.toast.warning(message);
+  } else if (typeof showToast === 'function') {
+    showToast(message, 'warning');
+  } else {
+    alert(message);
+  }
+}
+
 // Handle delete connection
 function handleDeleteConnection(platformValue) {
   // Platform name mapping
@@ -2748,6 +2794,12 @@ function handleDeleteConnection(platformValue) {
   };
   
   const platformName = platformNames[platformValue] || platformValue;
+  
+  // Check if connection is synced before allowing delete
+  if (isCampaignConnectionSynced(platformValue)) {
+    showCampaignDeleteLockMessage(platformName);
+    return;
+  }
   
   // Confirm deletion
   if (!confirm(`Are you sure you want to remove ${platformName} from this campaign?`)) {

@@ -360,6 +360,41 @@
                           </td>
                         </tr>
 
+                        <!-- Template -->
+                        <tr class="border-b border-default">
+                          <td class="px-3 py-1 text-sm font-medium border-r border-default">
+                            Template
+                          </td>
+                          <td class="px-6 py-1 text-sm">
+                            <span id="displayBeaconTemplate" class="text-gray-800 break-words">N/A</span>
+                            <select id="beaconTemplate" class="hidden campaign-details-input" aria-label="Template" title="Template">
+                              <option value="">-- Select --</option>
+                              <option value="Association Affinity">Association Affinity</option>
+                              <option value="Audio">Audio</option>
+                              <option value="CTV">CTV</option>
+                              <option value="Display">Display</option>
+                              <option value="DOOH">DOOH</option>
+                              <option value="Email">Email</option>
+                              <option value="Native">Native</option>
+                              <option value="Social">Social</option>
+                              <option value="Video">Video</option>
+                              <option value="YouTube">YouTube</option>
+                              <option value="Search">Search</option>
+                            </select>
+                          </td>
+                        </tr>
+
+                        <!-- DSP Impressions -->
+                        <tr class="border-b border-default">
+                          <td class="px-3 py-1 text-sm font-medium border-r border-default">
+                            DSP Impressions
+                          </td>
+                          <td class="px-6 py-1 text-sm">
+                            <span id="displayBeaconDspImpressions" class="text-gray-800 break-words">N/A</span>
+                            <input id="beaconDspImpressions" type="number" class="hidden campaign-details-input" aria-label="DSP Impressions" title="DSP Impressions" min="0" />
+                          </td>
+                        </tr>
+
                       </tbody>
                     </table>
                   </div>
@@ -626,6 +661,8 @@
   { span: 'displayBeaconCampaignName', input: 'beaconCampaignName' },
   { span: 'displayBeaconStartDate', input: 'beaconStartDate' },
   { span: 'displayBeaconEndDate', input: 'beaconEndDate' },
+  { span: 'displayBeaconTemplate', input: 'beaconTemplate' },
+  { span: 'displayBeaconDspImpressions', input: 'beaconDspImpressions' },
   // DSP Fields (these are linked to actual campaign data)
   { span: 'displayCampaignSeed', input: 'campaignSeed' },
   { span: 'displayCampaignOrganization', input: 'campaignOrganization' },
@@ -652,6 +689,8 @@
   'beaconCampaignName',
   'beaconStartDate',
   'beaconEndDate',
+  'beaconTemplate',
+  'beaconDspImpressions',
   // DSP Fields
   'campaignSeed',
   'campaignOrganization',
@@ -849,6 +888,8 @@
                                 // Beacon Fields mapping
                                 if (now.beaconCampaignId !== undefined) topLevelCampaign.beaconCampaignId = now.beaconCampaignId;
                                 if (now.beaconCampaignName !== undefined) topLevelCampaign.beaconCampaignName = now.beaconCampaignName;
+                                if (now.beaconTemplate !== undefined) topLevelCampaign.beaconTemplate = now.beaconTemplate;
+                                if (now.beaconDspImpressions !== undefined) topLevelCampaign.beaconDspImpressions = now.beaconDspImpressions;
                                 // Ad Server Fields - New 4 Field Structure
                                 if (now.adServerCampaignName !== undefined) topLevelCampaign.adServerCampaignName = now.adServerCampaignName;
                                 if (now.adServerSchedule !== undefined) topLevelCampaign.adServerSchedule = now.adServerSchedule;
@@ -879,6 +920,8 @@
                                     // Beacon Fields mapping
                                     if (now.beaconCampaignId !== undefined) campaign.beaconCampaignId = now.beaconCampaignId;
                                     if (now.beaconCampaignName !== undefined) campaign.beaconCampaignName = now.beaconCampaignName;
+                                    if (now.beaconTemplate !== undefined) campaign.beaconTemplate = now.beaconTemplate;
+                                    if (now.beaconDspImpressions !== undefined) campaign.beaconDspImpressions = now.beaconDspImpressions;
                                     // Ad Server Fields - New 4 Field Structure
                                     if (now.adServerCampaignName !== undefined) campaign.adServerCampaignName = now.adServerCampaignName;
                                     if (now.adServerSchedule !== undefined) campaign.adServerSchedule = now.adServerSchedule;
@@ -1670,6 +1713,8 @@ window.addEventListener('DOMContentLoaded', () => {
   safeSet('displayBeaconCampaignName', campaign.beaconCampaignName);
   safeSet('displayBeaconStartDate', campaign.beaconStartDate, 'date');
   safeSet('displayBeaconEndDate', campaign.beaconEndDate, 'date');
+  safeSet('displayBeaconTemplate', campaign.beaconTemplate);
+  safeSet('displayBeaconDspImpressions', campaign.beaconDspImpressions);
   // DSP Fields
   safeSet('displayCampaignSeed', campaign.seed);
   safeSet('displayCampaignOrganization', campaign.organization);
@@ -1694,6 +1739,8 @@ window.addEventListener('DOMContentLoaded', () => {
   safeInput('beaconCampaignName', campaign.beaconCampaignName);
   safeInput('beaconStartDate', campaign.beaconStartDate);
   safeInput('beaconEndDate', campaign.beaconEndDate);
+  safeInput('beaconTemplate', campaign.beaconTemplate);
+  safeInput('beaconDspImpressions', campaign.beaconDspImpressions);
   // DSP Fields
   safeInput('campaignSeed', campaign.seed);
   safeInput('campaignOrganization', campaign.organization);
