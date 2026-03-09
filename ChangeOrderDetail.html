@@ -657,23 +657,8 @@
             <span><strong>Account #:</strong> ${adv ? (adv.account || adv.accountNumber || '—') : '—'}</span>
             <span><strong>Name:</strong> ${entity.name || '—'}</span>
           </div>
-          <div class="co-fields-grid">
-            <div class="co-field-group">
-              <label>Contact Name</label>
-              <input type="text" value="${fields.contactName || ''}" placeholder="Primary contact" data-adv-field="contactName" class="w-full border border-gray-300 rounded-md px-2 py-1 text-sm" />
-            </div>
-            <div class="co-field-group">
-              <label>Contact Email</label>
-              <input type="email" value="${fields.contactEmail || ''}" placeholder="email@example.com" data-adv-field="contactEmail" class="w-full border border-gray-300 rounded-md px-2 py-1 text-sm" />
-            </div>
-            <div class="co-field-group">
-              <label>Billing Address</label>
-              <input type="text" value="${fields.billingAddress || ''}" placeholder="Street address" data-adv-field="billingAddress" class="w-full border border-gray-300 rounded-md px-2 py-1 text-sm" />
-            </div>
-            <div class="co-field-group">
-              <label>Industry/Vertical</label>
-              <input type="text" value="${fields.industry || ''}" placeholder="e.g. Healthcare, Retail" data-adv-field="industry" class="w-full border border-gray-300 rounded-md px-2 py-1 text-sm" />
-            </div>
+        
+            
             <div class="co-field-group" style="grid-column: 1 / -1;">
               <label>Advertiser Notes</label>
               <textarea data-adv-field="notes" class="w-full border border-gray-300 rounded-md px-2 py-1 text-sm" rows="2" placeholder="Special instructions or notes about this advertiser...">${fields.notes || ''}</textarea>
@@ -696,41 +681,30 @@
         const fields = entity.fields || {};
 
         return `
-          <div class="flex gap-8 text-sm text-gray-600 mb-4">
+            <div class="flex gap-8 text-sm text-gray-600 mb-4">
             <span><strong>ID:</strong> ${entity.id}</span>
             <span><strong>DSP:</strong> ${camData.dsp || '—'}</span>
-            <span><strong>Status:</strong> ${camData.status || '—'}</span>
-          </div>
+            <span><strong>Start Date:</strong> ${camData.startDate ? new Date(camData.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—'}</span>
+            <span><strong>End Date:</strong> ${camData.endDate ? new Date(camData.endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—'}</span>
+            </div>
           <div class="co-fields-grid">
             <div class="co-field-group">
-              <label>Campaign Name</label>
+              <label>GCM Campaign Name</label>
               <input type="text" value="${fields.name || camData.beaconCampaignName || camData.name || ''}" placeholder="Campaign name" data-cam-id="${entity.id}" data-cam-field="name" class="w-full border border-gray-300 rounded-md px-2 py-1 text-sm" />
             </div>
             <div class="co-field-group">
-              <label>Flight Start Date</label>
-              <input type="date" value="${fields.startDate || ''}" data-cam-id="${entity.id}" data-cam-field="startDate" class="w-full border border-gray-300 rounded-md px-2 py-1 text-sm" />
+              <label>DSP Campaign Name</label>
+              <input type="text" value="${fields.name || camData.beaconCampaignName || camData.name || ''}" placeholder="Campaign name" data-cam-id="${entity.id}" data-cam-field="name" class="w-full border border-gray-300 rounded-md px-2 py-1 text-sm" />
+            </div>
+           
+  
+            <div class="co-field-group">
+              <label>Template</label>
+              <input type="text" value="${fields.frequencyCap || ''}" placeholder="e.g. Programmatic Display" data-cam-id="${entity.id}" data-cam-field="frequencyCap" class="w-full border border-gray-300 rounded-md px-2 py-1 text-sm" />
             </div>
             <div class="co-field-group">
-              <label>Flight End Date</label>
-              <input type="date" value="${fields.endDate || ''}" data-cam-id="${entity.id}" data-cam-field="endDate" class="w-full border border-gray-300 rounded-md px-2 py-1 text-sm" />
-            </div>
-            <div class="co-field-group">
-              <label>Budget</label>
-              <input type="text" value="${fields.budget || ''}" placeholder="e.g. $10,000" data-cam-id="${entity.id}" data-cam-field="budget" class="w-full border border-gray-300 rounded-md px-2 py-1 text-sm" />
-            </div>
-            <div class="co-field-group">
-              <label>Pacing</label>
-              <select data-cam-id="${entity.id}" data-cam-field="pacing" class="w-full border border-gray-300 rounded-md px-2 py-1 text-sm">
-                <option value="" ${!fields.pacing ? 'selected' : ''}>Select pacing...</option>
-                <option value="even" ${fields.pacing === 'even' ? 'selected' : ''}>Even</option>
-                <option value="asap" ${fields.pacing === 'asap' ? 'selected' : ''}>ASAP</option>
-                <option value="frontloaded" ${fields.pacing === 'frontloaded' ? 'selected' : ''}>Frontloaded</option>
-                <option value="backloaded" ${fields.pacing === 'backloaded' ? 'selected' : ''}>Backloaded</option>
-              </select>
-            </div>
-            <div class="co-field-group">
-              <label>Frequency Cap</label>
-              <input type="text" value="${fields.frequencyCap || ''}" placeholder="e.g. 3 per day" data-cam-id="${entity.id}" data-cam-field="frequencyCap" class="w-full border border-gray-300 rounded-md px-2 py-1 text-sm" />
+              <label>DSP Impressions</label>
+              <input type="text" value="${fields.frequencyCap || ''}" placeholder="e.g. 500,000" data-cam-id="${entity.id}" data-cam-field="frequencyCap" class="w-full border border-gray-300 rounded-md px-2 py-1 text-sm" />
             </div>
             <div class="co-field-group" style="grid-column: 1 / -1;">
               <label>Campaign Notes / Instructions</label>
@@ -751,11 +725,12 @@
         const fields = entity.fields || {};
 
         return `
-          <div class="flex gap-8 text-sm text-gray-600 mb-4">
+            <div class="flex gap-8 text-sm text-gray-600 mb-4">
             <span><strong>ID:</strong> ${entity.id}</span>
-            <span><strong>Classification:</strong> ${agData.classification || agData.multiviewClassification || '—'}</span>
-            <span><strong>Tactic:</strong> ${agData.multiviewTactic || '—'}</span>
-          </div>
+            <span><strong>Classification:</strong> ${agData.classification || agData.multiviewClassification || agData.beaconClassification || '—'}</span>
+            <span><strong>Tactic:</strong> ${agData.tactic || agData.multiviewTactic || agData.beaconTactic || '—'}</span>
+            <span><strong>Audience:</strong> ${agData.audience || '—'}</span>
+            </div>
           <div class="co-fields-grid">
             <div class="co-field-group">
               <label>Start Date <span class="text-red-500 font-bold">*</span></label>
