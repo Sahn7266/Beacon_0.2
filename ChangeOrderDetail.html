@@ -455,6 +455,9 @@
 
       saveChangeOrder(co);
       if (typeof showToast === 'function') showToast('Change order saved', 'success');
+      
+      // Navigate back to Change Orders list
+      window.location.href = './ChangeOrderList.html';
     });
 
     // syncCOBtn is commented out in HTML, so skip adding listener

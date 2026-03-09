@@ -1578,7 +1578,23 @@
 window.addEventListener('DOMContentLoaded', () => {
   const urlParams = new URLSearchParams(window.location.search);
   const campaignId = urlParams.get('campaignId');
-  const campaignName = urlParams.get('campaignName');
+  let campaignName = urlParams.get('campaignName');
+  
+  // If no campaign name in URL, look it up from storage
+  if (!campaignName && campaignId) {
+    try {
+      const treeData = JSON.parse(localStorage.getItem('campaign_tree_groups') || '{}');
+      let allCampaigns = [];
+      if (treeData.campaigns) allCampaigns = allCampaigns.concat(treeData.campaigns);
+      if (treeData.groups) treeData.groups.forEach(g => { if (g.campaigns) allCampaigns = allCampaigns.concat(g.campaigns); });
+      const foundCampaign = allCampaigns.find(c => c.id === campaignId);
+      if (foundCampaign) {
+        campaignName = foundCampaign.beaconCampaignName || foundCampaign.name || '';
+      }
+    } catch (e) {
+      console.warn('Failed to look up campaign name:', e);
+    }
+  }
   
   // Update the page subtitle with campaign name
   const subtitleElement = document.getElementById('campaignDetailsSubtitle');

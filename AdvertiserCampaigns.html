@@ -3119,7 +3119,12 @@ function handleCampaignCreation(redirectToAdGroups) {
 
   // If redirecting to ad groups
   if (redirectToAdGroups) {
-    window.location.href = `./AdvertiserAdGroup.html?newCampaign=${campaign.id}`;
+    const campaignNameParam = encodeURIComponent(campaign.beaconCampaignName || campaign.name || '');
+    window.location.href = `./AdvertiserAdGroup.html?newCampaign=${campaign.id}&campaignName=${campaignNameParam}`;
+  } else {
+    // Redirect to campaign details page
+    const campaignNameParam = encodeURIComponent(campaign.beaconCampaignName || campaign.name || '');
+    window.location.href = `./CampaignDetails.html?campaignId=${campaign.id}&campaignName=${campaignNameParam}`;
   }
 }
 

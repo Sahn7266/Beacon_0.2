@@ -2024,7 +2024,20 @@ document.addEventListener('DOMContentLoaded', function () {
 document.addEventListener('DOMContentLoaded', () => {
   const urlParams = new URLSearchParams(window.location.search);
   const adGroupId = urlParams.get('id');
-  const campaignId = urlParams.get('campaignId');
+  let campaignId = urlParams.get('campaignId');
+  
+  // If no campaignId in URL, look it up from the ad group data
+  if (!campaignId && adGroupId) {
+    try {
+      const adgroups = JSON.parse(localStorage.getItem('adgroups_data_v1') || '[]');
+      const adGroup = adgroups.find(ag => ag.id === adGroupId);
+      if (adGroup) {
+        campaignId = adGroup.campaign || adGroup.campaignId || '';
+      }
+    } catch (e) {
+      console.warn('Failed to look up campaignId from ad group:', e);
+    }
+  }
   
   // Update sidebar links with query parameters
   const navLinks = document.querySelectorAll('[data-nav-link]');

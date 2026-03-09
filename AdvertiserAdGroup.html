@@ -2866,6 +2866,10 @@ document.addEventListener('DOMContentLoaded', () => {
       if (adServerSync) adServerSync.checked = false;
       
       updateFieldVisibility();
+      
+      // Redirect to ad group details page (include campaignId for breadcrumbs)
+      const campaignIdParam = adGroup.campaign ? `&campaignId=${encodeURIComponent(adGroup.campaign)}` : '';
+      window.location.href = `./AdGroupDetails.html?id=${adGroup.id}${campaignIdParam}`;
     }
     } catch (error) {
       console.error('Error creating ad group:', error);
