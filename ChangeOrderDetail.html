@@ -342,6 +342,55 @@
       }
     };
 
+    // Handle platform value dropdown change (DSP or Ad Server)
+    window.changePlatformValue = function(selectEl, type, id, platform) {
+      if (!co || !co.entities) return;
+      const entity = co.entities.find(e => e.type === type && e.id === id);
+      if (!entity) return;
+
+      const newValue = selectEl.value;
+      if (platform === 'dsp') {
+        entity.dsp = newValue || '';
+      } else if (platform === 'adServer') {
+        entity.adServer = newValue || '';
+      }
+      
+      // Save
+      co.modifiedDate = new Date().toISOString();
+      saveChangeOrder(co);
+    };
+
+    // Handle platform flag dropdown change (CREATE/EDIT/-)
+    window.changePlatformFlag = function(selectEl, type, id, platform) {
+      if (!co || !co.entities) return;
+      const entity = co.entities.find(e => e.type === type && e.id === id);
+      if (!entity) return;
+
+      const newValue = selectEl.value;
+      if (platform === 'dsp') {
+        entity.dspFlag = newValue || '';
+      } else if (platform === 'adServer') {
+        entity.adServerFlag = newValue || '';
+      }
+      
+      // Update dropdown styling
+      selectEl.classList.remove('flag-edit', 'flag-create');
+      if (newValue === 'edit') {
+        selectEl.classList.add('flag-edit');
+      } else if (newValue === 'create') {
+        selectEl.classList.add('flag-create');
+      }
+      
+      // Save
+      co.modifiedDate = new Date().toISOString();
+      saveChangeOrder(co);
+      
+      if (typeof showToast === 'function' && newValue) {
+        const platformName = platform === 'dsp' ? 'DSP' : 'Ad Server';
+        showToast(`${platformName} flag set to ${newValue.toUpperCase()}`, 'success');
+      }
+    };
+
     // Close manage entities modal
     window.closeManageEntitiesModal = function() {
       document.getElementById('entitySelectModal').classList.add('hidden');
@@ -588,6 +637,54 @@
       const entityFlag = entity.flag || '';
       const flagClass = entityFlag === 'create' ? 'flag-create' : entityFlag === 'edit' ? 'flag-edit' : '';
 
+      // Get DSP and Ad Server selections - try from entity, then from source data
+      let dspValue = entity.dsp || '';
+      let adServerValue = entity.adServer || '';
+      
+      // If not set on entity, look up from the source data (advertiser/campaign/adgroup connectors)
+      if (!dspValue || !adServerValue) {
+        try {
+          let sourceData = null;
+          
+          if (entity.type === 'advertiser') {
+            // For advertiser, use the current adv object or look up from storage
+            sourceData = adv;
+            if (!sourceData && entity.id) {
+              const allAdvs = JSON.parse(localStorage.getItem('adv_list_data') || '[]');
+              sourceData = allAdvs.find(a => a.id === entity.id);
+            }
+          } else if (entity.type === 'campaign') {
+            const tree = JSON.parse(localStorage.getItem('campaign_tree_groups') || '{}');
+            let allCams = [];
+            if (tree.campaigns) allCams = allCams.concat(tree.campaigns);
+            if (tree.groups) tree.groups.forEach(g => { if (g.campaigns) allCams = allCams.concat(g.campaigns); });
+            sourceData = allCams.find(c => c.id === entity.id);
+          } else if (entity.type === 'adgroup') {
+            const allAGs = JSON.parse(localStorage.getItem('adgroups_data_v1') || '[]');
+            sourceData = allAGs.find(ag => ag.id === entity.id);
+          }
+          
+          if (sourceData && sourceData.connectors) {
+            // Get DSP from connectors.dsp array
+            if (!dspValue && sourceData.connectors.dsp && sourceData.connectors.dsp.length > 0) {
+              dspValue = sourceData.connectors.dsp[0]; // Use first DSP
+            }
+            // Get Ad Server from connectors.adServer array
+            if (!adServerValue && sourceData.connectors.adServer && sourceData.connectors.adServer.length > 0) {
+              adServerValue = sourceData.connectors.adServer[0]; // Use first Ad Server
+            }
+          }
+        } catch (e) {
+          console.warn('Failed to look up connector data:', e);
+        }
+      }
+      
+      const dspFlag = entity.dspFlag || '';
+      const dspFlagClass = dspFlag === 'create' ? 'flag-create' : dspFlag === 'edit' ? 'flag-edit' : '';
+      
+      const adServerFlag = entity.adServerFlag || '';
+      const adServerFlagClass = adServerFlag === 'create' ? 'flag-create' : adServerFlag === 'edit' ? 'flag-edit' : '';
+
       const section = document.createElement('div');
       section.className = `co-entity-section ${depthClass}`;
       section.innerHTML = `
@@ -596,14 +693,36 @@
             <span class="toggle-arrow open" id="${secId}-arrow">▶</span>
             ${entityPill(entity.type)}
             ${displayName}
-            <select class="entity-flag-select ${flagClass}" onclick="event.stopPropagation()" onchange="changeEntityFlag(this,'${entity.type}','${entity.id}')" title="Select action type">
-              <option value="" ${entityFlag === '' ? 'selected' : ''}>-</option>
-              <option value="edit" ${entityFlag === 'edit' ? 'selected' : ''}>EDIT</option>
-              <option value="create" ${entityFlag === 'create' ? 'selected' : ''}>CREATE</option>
-            </select>
             ${orphanWarning}
           </div>
-          ${!isAdv ? `<span class="remove-btn" onclick="event.stopPropagation();removeEntity('${entity.type}','${entity.id}')">✕ Remove</span>` : ''}
+          <div class="flex items-center gap-4" style="font-size: 11px;" onclick="event.stopPropagation()">
+            <div class="flex items-center gap-1">
+              <span style="font-weight: 600; color: #374151;">DSP:</span>
+              <select class="entity-flag-select" onchange="changePlatformValue(this,'${entity.type}','${entity.id}','dsp')" title="Select DSP">
+                <option value="">-</option>
+                <option value="trade-desk" ${dspValue === 'trade-desk' ? 'selected' : ''}>TTD</option>
+                <option value="dv360" ${dspValue === 'dv360' ? 'selected' : ''}>DV360</option>
+                <option value="simplifi" ${dspValue === 'simplifi' ? 'selected' : ''}>Simpli.fi</option>
+              </select>
+              <select class="entity-flag-select ${dspFlagClass}" onchange="changePlatformFlag(this,'${entity.type}','${entity.id}','dsp')" title="DSP Action">
+                <option value="" ${dspFlag === '' ? 'selected' : ''}>-</option>
+                <option value="edit" ${dspFlag === 'edit' ? 'selected' : ''}>EDIT</option>
+                <option value="create" ${dspFlag === 'create' ? 'selected' : ''}>CREATE</option>
+              </select>
+            </div>
+            <div class="flex items-center gap-1">
+              <span style="font-weight: 600; color: #374151;">Ad Server:</span>
+              <select class="entity-flag-select" onchange="changePlatformValue(this,'${entity.type}','${entity.id}','adServer')" title="Select Ad Server">
+                <option value="">-</option>
+                <option value="google-campaign-manager" ${adServerValue === 'google-campaign-manager' ? 'selected' : ''}>GCM</option>
+              </select>
+              <select class="entity-flag-select ${adServerFlagClass}" onchange="changePlatformFlag(this,'${entity.type}','${entity.id}','adServer')" title="Ad Server Action">
+                <option value="" ${adServerFlag === '' ? 'selected' : ''}>-</option>
+                <option value="edit" ${adServerFlag === 'edit' ? 'selected' : ''}>EDIT</option>
+                <option value="create" ${adServerFlag === 'create' ? 'selected' : ''}>CREATE</option>
+              </select>
+            </div>
+          </div>
         </div>
         <div class="co-entity-body" id="${secId}-body">
           ${buildEntityBody(entity)}
